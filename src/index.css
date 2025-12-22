@@ -1,0 +1,27 @@
+@import "tailwindcss";
+
+@theme {
+  --color-monopoly-brown: #8B4513;
+  --color-monopoly-lightBlue: #87CEEB;
+  --color-monopoly-pink: #FF69B4;
+  --color-monopoly-orange: #FFA500;
+  --color-monopoly-red: #FF0000;
+  --color-monopoly-yellow: #FFD700;
+  --color-monopoly-green: #008000;
+  --color-monopoly-darkBlue: #00008B;
+  --color-monopoly-board: #CDE6D0;
+}
+
+:root {
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  background-color: #f0fdf4;
+  color: #1f2937;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+}
