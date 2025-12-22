@@ -59,8 +59,8 @@ export const BoardMap: React.FC<BoardMapProps> = ({ isOpen, onClose, isSpectator
   };
 
   return (
-    <div className={`${isSpectator ? 'fixed inset-0 bg-slate-100 z-50 flex flex-col' : 'fixed inset-0 bg-slate-900/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm overflow-auto'}`}>
-      <div className={`${isSpectator ? 'w-full h-full flex flex-col' : 'bg-white rounded-xl shadow-2xl w-full max-w-5xl aspect-square max-h-[90vh] overflow-hidden flex flex-col'}`}>
+    <div className={`${isSpectator ? 'fixed inset-0 bg-slate-100 z-50 flex flex-col' : 'fixed inset-0 bg-slate-900/50 z-[60] flex items-center justify-center p-4 backdrop-blur-sm overflow-auto'}`}>
+      <div className={`${isSpectator ? 'w-full h-full flex flex-col' : 'bg-white rounded-xl shadow-2xl w-full max-w-5xl sm:aspect-square max-h-[90vh] sm:overflow-hidden flex flex-col h-full sm:h-auto'}`}>
         {!isSpectator && (
           <div className="p-4 border-b border-slate-200 flex justify-between items-center bg-slate-50">
             <h2 className="text-xl font-bold text-slate-800">Game Board</h2>
@@ -71,7 +71,7 @@ export const BoardMap: React.FC<BoardMapProps> = ({ isOpen, onClose, isSpectator
         )}
         
         <div className="flex-1 p-4 overflow-auto bg-slate-100 flex items-center justify-center">
-          <div className="grid grid-cols-11 grid-rows-11 gap-1 bg-slate-300 p-1 w-full max-w-[800px] aspect-square border-4 border-slate-800 shadow-xl">
+          <div className="grid grid-cols-11 grid-rows-11 gap-1 bg-slate-300 p-1 w-full max-w-[min(90vw,800px)] aspect-square border-4 border-slate-800 shadow-xl">
             
             {/* Center Board (Logo area) */}
             <div className="col-start-2 col-end-11 row-start-2 row-end-11 bg-[#CEE6D0] flex flex-col items-center justify-center relative">
