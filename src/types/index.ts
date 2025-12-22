@@ -13,6 +13,8 @@ export interface Property {
   ownerId?: string | null;
   houses: number; // 0-4 houses, 5 = hotel
   isMortgaged: boolean;
+  priceOverride?: number;
+  rentOverride?: number[];
 }
 
 export interface Player {
@@ -62,4 +64,9 @@ export interface GameState {
   trades?: Trade[]; // Optional for backward compatibility during migration
   turnCount: number;
   diceMode: 'DIGITAL' | 'PHYSICAL';
+
+  // Game settings
+  startingMoney?: number;
+  priceMultiplier?: number; // multiply base price by this
+  rentMultiplier?: number;  // multiply base rent by this
 }

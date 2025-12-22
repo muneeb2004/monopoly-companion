@@ -36,6 +36,13 @@ interface GameStore extends GameState {
   // Property Actions
   toggleMortgage: (propertyId: number) => Promise<void>;
   improveProperty: (propertyId: number, action: 'buy' | 'sell') => Promise<void>;
+
+  // Settings
+  setStartingMoney: (amount: number) => Promise<void>;
+  setMultipliers: (priceMultiplier: number, rentMultiplier: number) => Promise<void>;
+  setPropertyOverride: (propertyId: number, priceOverride?: number | null, rentOverride?: number[] | null) => Promise<void>;
+  applySettingsToProperties: () => void;
+  resetSettings: () => Promise<void>;
 }
 
 const INITIAL_STATE: Omit<GameStore, 'createNewGame' | 'joinGame' | 'leaveGame' | 'addPlayer' | 'startGame' | 'setDiceMode' | 'nextTurn' | 'updateBalance' | 'transferMoney' | 'assignProperty' | 'movePlayer' | 'toggleJail' | 'takeLoan' | 'repayLoan' | 'resetGame' | 'createTrade' | 'respondToTrade' | 'cancelTrade' | 'toggleMortgage' | 'improveProperty'> = {
@@ -50,6 +57,9 @@ const INITIAL_STATE: Omit<GameStore, 'createNewGame' | 'joinGame' | 'leaveGame' 
   trades: [],
   turnCount: 1,
   diceMode: 'DIGITAL',
+  startingMoney: 1500,
+  priceMultiplier: 1,
+  rentMultiplier: 1
 };
 
 export const useGameStore = create<GameStore>((set, get) => ({
@@ -62,7 +72,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     try {
       const { data, error } = await supabase
         .from('games')
-        .insert({ status: 'SETUP', dice_mode: 'DIGITAL' })
+        .insert({ status: 'SETUP', dice_mode: 'DIGITAL', starting_money: get().startingMoney, price_multiplier: get().priceMultiplier, rent_multiplier: get().rentMultiplier })
         .select()
         .single();
         
@@ -152,9 +162,20 @@ export const useGameStore = create<GameStore>((set, get) => ({
         turnCount: gameRes.data.turn_count,
         currentPlayerIndex: gameRes.data.current_player_index,
         players,
-        properties: mergedProperties,
+        properties: mergedProperties.map(mp => {
+          // merge override fields from DB (propsRes)
+          const dp = dynamicProps.find((d: any) => d.property_index === mp.id);
+          return {
+            ...mp,
+            priceOverride: dp ? dp.price_override ?? undefined : undefined,
+            rentOverride: dp ? (dp.rent_override || undefined) : undefined
+          };
+        }),
         transactions,
         trades,
+        startingMoney: gameRes.data.starting_money ?? get().startingMoney,
+        priceMultiplier: gameRes.data.price_multiplier ?? get().priceMultiplier,
+        rentMultiplier: gameRes.data.rent_multiplier ?? get().rentMultiplier,
         isLoading: false
       });
 
@@ -260,7 +281,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
 
   addPlayer: async (name, color, token) => {
-    const { gameId } = get();
+    const { gameId, startingMoney } = get();
     if (!supabase || !gameId) return;
     
     await supabase.from('players').insert({
@@ -268,7 +289,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       name,
       color,
       token,
-      balance: 1500
+      balance: startingMoney ?? 1500
     });
   },
 
@@ -276,8 +297,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const { gameId } = get();
     if (!supabase || !gameId) return;
 
-    // Initialize all properties for the game
-    const propertyInserts = INITIAL_PROPERTIES.map(p => ({
+    // Initialize all properties for the game using current properties (respect settings)
+    const currentProps = get().properties;
+    const propertyInserts = currentProps.map(p => ({
       game_id: gameId,
       property_index: p.id,
       owner_id: null,
@@ -300,6 +322,75 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
     await supabase.from('games').update({ dice_mode: mode }).eq('id', gameId);
     set({ diceMode: mode });
+  },
+
+  // Settings
+  setStartingMoney: async (amount) => {
+    const { gameId } = get();
+    if (gameId && supabase) {
+      await supabase.from('games').update({ starting_money: amount }).eq('id', gameId);
+    }
+    set({ startingMoney: amount });
+  },
+
+  setMultipliers: async (priceMultiplier, rentMultiplier) => {
+    const { gameId } = get();
+    if (gameId && supabase) {
+      await supabase.from('games').update({ price_multiplier: priceMultiplier, rent_multiplier: rentMultiplier }).eq('id', gameId);
+    }
+    set({ priceMultiplier, rentMultiplier });
+  },
+
+  setPropertyOverride: async (propertyId, priceOverride = null, rentOverride = null) => {
+    const { gameId, properties } = get();
+    // Update DB
+    if (gameId && supabase) {
+      await supabase.from('game_properties').update({ price_override: priceOverride, rent_override: rentOverride }).match({ game_id: gameId, property_index: propertyId });
+    }
+
+    // Update local state
+    set({ properties: properties.map(p => p.id === propertyId ? { ...p, priceOverride: priceOverride === null ? undefined : priceOverride, rentOverride: rentOverride === null ? undefined : rentOverride } : p) });
+  },
+
+  applySettingsToProperties: () => {
+    const priceMul = get().priceMultiplier ?? 1;
+    const rentMul = get().rentMultiplier ?? 1;
+
+    // Start from INITIAL_PROPERTIES but respect existing per-game overrides in current properties
+    const currentOverrides = get().properties.reduce<Record<number, any>>((acc, p) => {
+      acc[p.id] = { priceOverride: p.priceOverride, rentOverride: p.rentOverride };
+      return acc;
+    }, {} as Record<number, any>);
+
+    const merged = INITIAL_PROPERTIES.map(p => {
+      const override = currentOverrides[p.id] || {};
+      const basePrice = p.price ? Math.round((p.price as number) * priceMul) : undefined;
+      const finalPrice = override.priceOverride ?? basePrice;
+      const baseRent = p.rent ? p.rent.map(r => Math.round(r * rentMul)) : undefined;
+      const finalRent = override.rentOverride ?? baseRent;
+
+      return {
+        ...p,
+        price: finalPrice,
+        rent: finalRent,
+        priceOverride: override.priceOverride,
+        rentOverride: override.rentOverride,
+        houses: 0,
+        isMortgaged: false,
+        ownerId: null
+      };
+    });
+
+    set({ properties: merged });
+  },
+
+  resetSettings: async () => {
+    const { gameId } = get();
+    if (gameId && supabase) {
+      await supabase.from('games').update({ starting_money: 1500, price_multiplier: 1, rent_multiplier: 1 }).eq('id', gameId);
+      await supabase.from('game_properties').update({ price_override: null, rent_override: null }).eq('game_id', gameId);
+    }
+    set({ startingMoney: 1500, priceMultiplier: 1, rentMultiplier: 1, properties: INITIAL_PROPERTIES });
   },
 
   nextTurn: async () => {

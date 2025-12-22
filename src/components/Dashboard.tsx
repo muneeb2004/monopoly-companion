@@ -2,9 +2,10 @@ import React, { useState, useMemo } from 'react';
 import { useGameStore } from '../store/gameStore';
 import { PlayerCard } from './PlayerCard';
 import { ActionCenter } from './ActionCenter';
-import { History, Map as MapIcon, Bell, Building2 } from 'lucide-react';
+import { History, Map as MapIcon, Bell, Building2, Settings2 } from 'lucide-react';
 import { PropertyManager } from './PropertyManager';
 import { BoardMap } from './BoardMap';
+import { SettingsModal } from './SettingsModal';
 
 
 const DashboardComponent: React.FC = () => {
@@ -16,8 +17,8 @@ const DashboardComponent: React.FC = () => {
   const respondToTrade = useGameStore(state => state.respondToTrade);
   const [showProperties, setShowProperties] = useState(false);
   const [showMap, setShowMap] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
 
-  // Render counter for tests
   const renderRef = React.useRef(0);
   renderRef.current++;
 
@@ -57,6 +58,14 @@ const DashboardComponent: React.FC = () => {
               title="Manage Properties"
             >
               <Building2 size={20} />
+            </button>
+            <button
+              onClick={() => setShowSettings(true)}
+              className="p-2 bg-slate-100 hover:bg-slate-200 rounded-full transition-colors text-slate-700"
+              aria-label="Settings"
+              title="Settings"
+            >
+              <Settings2 size={20} />
             </button>
           </div>
         </div>
@@ -187,6 +196,8 @@ const DashboardComponent: React.FC = () => {
       <ActionCenter />
       <PropertyManager isOpen={showProperties} onClose={() => setShowProperties(false)} />
       <BoardMap isOpen={showMap} onClose={() => setShowMap(false)} />
+      <PropertyManager isOpen={showProperties} onClose={() => setShowProperties(false)} />
+      <SettingsModal isOpen={showSettings} onClose={() => setShowSettings(false)} />
     </div>
   );
 };
