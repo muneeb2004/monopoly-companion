@@ -18,7 +18,7 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({ player, isCurrentTurn, p
   return (
     <div 
       className={cn(
-        "relative flex flex-col p-4 rounded-xl border-2 transition-all duration-300 overflow-hidden",
+        "relative flex flex-col p-4 rounded-xl border-2 transition-all duration-300 overflow-visible",
         isCurrentTurn 
           ? "bg-white border-blue-500 shadow-xl scale-105 z-10" 
           : "bg-white border-slate-100 shadow-sm hover:border-slate-300"
