@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useGameStore } from '../store/gameStore';
 import { X, ArrowRightLeft, DollarSign, Home } from 'lucide-react';
 import { cn } from '../lib/utils';
-import { Property } from '../types';
+
 
 interface TradeModalProps {
   isOpen: boolean;

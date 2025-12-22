@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useGameStore } from '../store/gameStore';
 import { getTokenById } from '../data/tokens';
-import { ArrowRight, DollarSign, Briefcase, Building2, Landmark, ArrowRightLeft, Calculator } from 'lucide-react';
+import { ArrowRight, Briefcase, Building2, Landmark, ArrowRightLeft, Calculator } from 'lucide-react';
 import { TransferModal } from './TransferModal';
 import { LoanModal } from './LoanModal';
 import { TradeModal } from './TradeModal';

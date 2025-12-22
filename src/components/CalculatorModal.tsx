@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useGameStore } from '../store/gameStore';
-import { X, Delete, User, Calculator } from 'lucide-react';
+import { X, Delete, Calculator } from 'lucide-react';
 import { cn } from '../lib/utils';
 
 interface CalculatorModalProps {

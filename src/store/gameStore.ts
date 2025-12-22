@@ -1,6 +1,5 @@
 import { create } from 'zustand';
-import { v4 as uuidv4 } from 'uuid';
-import type { GameState, Transaction, TransactionType, Player, Property, Trade, TradeStatus } from '../types';
+import type { GameState, Transaction, TransactionType, Player, Trade, TradeStatus } from '../types';
 import { INITIAL_PROPERTIES } from '../data/properties';
 import { supabase } from '../lib/supabase';
 
@@ -39,7 +38,7 @@ interface GameStore extends GameState {
   improveProperty: (propertyId: number, action: 'buy' | 'sell') => Promise<void>;
 }
 
-const INITIAL_STATE: Omit<GameStore, 'createNewGame' | 'joinGame' | 'leaveGame' | 'addPlayer' | 'startGame' | 'nextTurn' | 'updateBalance' | 'transferMoney' | 'assignProperty' | 'movePlayer' | 'toggleJail' | 'takeLoan' | 'repayLoan' | 'resetGame' | 'createTrade' | 'respondToTrade' | 'cancelTrade' | 'toggleMortgage' | 'improveProperty'> = {
+const INITIAL_STATE: Omit<GameStore, 'createNewGame' | 'joinGame' | 'leaveGame' | 'addPlayer' | 'startGame' | 'setDiceMode' | 'nextTurn' | 'updateBalance' | 'transferMoney' | 'assignProperty' | 'movePlayer' | 'toggleJail' | 'takeLoan' | 'repayLoan' | 'resetGame' | 'createTrade' | 'respondToTrade' | 'cancelTrade' | 'toggleMortgage' | 'improveProperty'> = {
   gameId: null,
   gameStatus: null,
   isLoading: false,

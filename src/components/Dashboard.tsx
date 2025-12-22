@@ -5,7 +5,7 @@ import { ActionCenter } from './ActionCenter';
 import { History, Map as MapIcon, Bell, Building2 } from 'lucide-react';
 import { PropertyManager } from './PropertyManager';
 import { BoardMap } from './BoardMap';
-import { TradeStatus } from '../types';
+
 
 export const Dashboard: React.FC = () => {
   const { players, currentPlayerIndex, transactions, properties, trades, respondToTrade } = useGameStore();

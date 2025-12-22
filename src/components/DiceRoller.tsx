@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useGameStore } from '../store/gameStore';
 import { calculateRent } from '../lib/utils';
 import { cn } from '../lib/utils';
-import { Dices, MapPin, Keyboard, ArrowRight, Settings2 } from 'lucide-react';
+import { Dices, MapPin, ArrowRight, Settings2 } from 'lucide-react';
 
 interface DiceRollerProps {
   onRollComplete: (landedPropertyId: number) => void;
