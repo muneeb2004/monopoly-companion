@@ -1,4 +1,3 @@
-import React from 'react';
 import { render, act } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
 import { Dashboard } from '../components/Dashboard';
@@ -8,7 +7,7 @@ describe('Dashboard render behavior', () => {
   it('does not re-render on unrelated changes but re-renders on transactions change', () => {
     // initialize store
     useGameStore.setState({
-      players: [{ id: 'p1', name: 'Alice', color: '#f00', token: 'dog', balance: 1500 }],
+      players: [{ id: 'p1', name: 'Alice', color: '#f00', token: 'dog', balance: 1500, position: 0, isJailed: false, jailTurns: 0, getOutOfJailCards: 0, loans: 0 }],
       currentPlayerIndex: 0,
       transactions: [],
       trades: [],

@@ -16,8 +16,6 @@ const BoardMapComponent: React.FC<BoardMapProps> = ({ isOpen, onClose, isSpectat
   
   if (!isOpen) return null;
 
-  if (!isOpen) return null;
-
   // Helper to get grid position
   const getGridStyle = (index: number) => {
     let row = 1;
@@ -74,7 +72,8 @@ const BoardMapComponent: React.FC<BoardMapProps> = ({ isOpen, onClose, isSpectat
         )}
         
         <div className="flex-1 p-4 overflow-auto bg-slate-100 flex items-center justify-center">
-          <div className="grid grid-cols-11 grid-rows-11 gap-1 bg-slate-300 p-1 w-full max-w-[min(90vw,800px)] aspect-square border-4 border-slate-800 shadow-xl">
+          <div className="max-w-[min(90vw,1000px)] max-h-[80vh] w-full mx-auto">
+            <div className="grid grid-cols-11 grid-rows-11 gap-1 bg-slate-300 p-1 w-full h-full aspect-square border-4 border-slate-800 shadow-xl">
             
             {/* Center Board (Logo area) */}
             <div className="col-start-2 col-end-11 row-start-2 row-end-11 bg-[#CEE6D0] flex flex-col items-center justify-center relative">
@@ -135,6 +134,7 @@ const BoardMapComponent: React.FC<BoardMapProps> = ({ isOpen, onClose, isSpectat
                 </div>
               );
             })}
+            </div>
           </div>
         </div>
       </div>

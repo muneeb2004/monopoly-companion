@@ -1,4 +1,3 @@
-import React from 'react';
 import { render, act } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
 import { SetupScreen } from '../components/SetupScreen';
@@ -7,7 +6,7 @@ import { useGameStore } from '../store/gameStore';
 describe('SetupScreen render behavior', () => {
   it('does not re-render on unrelated state updates and re-renders when players change', () => {
     // Initialize store
-    useGameStore.setState({ players: [] });
+    useGameStore.setState({ players: [], properties: [] });
 
     const { container } = render(<SetupScreen />);
     const root = container.querySelector('[data-render-count]');
@@ -26,7 +25,7 @@ describe('SetupScreen render behavior', () => {
 
     // Related update: add a player
     act(() => {
-      useGameStore.setState({ players: [{ id: 'p1', name: 'Test', color: '#000', token: 'dog', balance: 1500 }] });
+      useGameStore.setState({ players: [{ id: 'p1', name: 'Test', color: '#000', token: 'dog', balance: 1500, position: 0, isJailed: false, jailTurns: 0, getOutOfJailCards: 0, loans: 0 }] });
     });
 
     const afterPlayers = Number(root?.getAttribute('data-render-count'));
