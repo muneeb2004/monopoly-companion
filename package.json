@@ -9,7 +9,8 @@
     "lint": "eslint .",
     "test": "vitest",
     "test:ci": "vitest run",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "postbuild": "node scripts/create-icons.cjs && node scripts/generate-sw.cjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.89.0",
@@ -39,10 +40,12 @@
     "globals": "^16.5.0",
     "jsdom": "^21.1.2",
     "postcss": "^8.5.6",
+    "sharp": "^0.33.5",
     "tailwindcss": "^4.1.18",
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.46.4",
     "vite": "^7.2.4",
-    "vitest": "^1.6.1"
+    "vitest": "^1.6.1",
+    "workbox-build": "^6.6.0"
   }
 }

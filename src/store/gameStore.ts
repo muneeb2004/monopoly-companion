@@ -45,7 +45,7 @@ interface GameStore extends GameState {
   resetSettings: () => Promise<void>;
 }
 
-const INITIAL_STATE: Omit<GameStore, 'createNewGame' | 'joinGame' | 'leaveGame' | 'addPlayer' | 'startGame' | 'setDiceMode' | 'nextTurn' | 'updateBalance' | 'transferMoney' | 'assignProperty' | 'movePlayer' | 'toggleJail' | 'takeLoan' | 'repayLoan' | 'resetGame' | 'createTrade' | 'respondToTrade' | 'cancelTrade' | 'toggleMortgage' | 'improveProperty'> = {
+const INITIAL_STATE = {
   gameId: null,
   gameStatus: null,
   isLoading: false,
@@ -56,7 +56,7 @@ const INITIAL_STATE: Omit<GameStore, 'createNewGame' | 'joinGame' | 'leaveGame' 
   transactions: [],
   trades: [],
   turnCount: 1,
-  diceMode: 'DIGITAL',
+  diceMode: 'DIGITAL' as 'DIGITAL',
   startingMoney: 1500,
   priceMultiplier: 1,
   rentMultiplier: 1
