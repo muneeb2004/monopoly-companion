@@ -21,7 +21,7 @@ export const Dashboard: React.FC = () => {
   const pendingTrades = trades?.filter(t => t.status === 'PENDING' && (t.receiverId === currentPlayer.id || t.senderId === currentPlayer.id));
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-40">
+    <div className="min-h-screen bg-slate-50 pb-24 lg:pb-32">
       {/* Top Header */}
       <header className="bg-white border-b border-slate-200 p-4 sticky top-0 z-40 shadow-sm">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
