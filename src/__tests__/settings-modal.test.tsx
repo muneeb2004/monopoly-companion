@@ -1,12 +1,11 @@
 import { render, fireEvent, screen, act } from '@testing-library/react';
-import { describe, it, expect } from 'vitest';
-import React from 'react';
+import { describe, it, expect, vi } from 'vitest';
 import { SettingsModal } from '../components/SettingsModal';
 import { useGameStore } from '../store/gameStore';
 
 describe('SettingsModal UI', () => {
   it('shows saving indicator and applies overrides', async () => {
-    useGameStore.setState({ properties: [{ id: 1, name: 'P1', price: 100, rent: [10], houses:0, isMortgaged:false }] });
+    useGameStore.setState({ properties: [{ id: 1, name: 'P1', type: 'street', group: 'brown', price: 100, rent: [10], houses:0, isMortgaged:false }] });
 
     const onClose = vi.fn();
 
