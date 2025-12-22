@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useGameStore } from '../store/gameStore';
 import { getTokenById } from '../data/tokens';
 import { ArrowRight, Briefcase, Building2, Landmark, ArrowRightLeft, Calculator } from 'lucide-react';
@@ -8,8 +8,12 @@ import { TradeModal } from './TradeModal';
 import { CalculatorModal } from './CalculatorModal';
 import { DiceRoller } from './DiceRoller';
 
-export const ActionCenter: React.FC = () => {
-  const { players, currentPlayerIndex, nextTurn, updateBalance, toggleJail } = useGameStore();
+const ActionCenterComponent: React.FC = () => {
+  const players = useGameStore(state => state.players);
+  const currentPlayerIndex = useGameStore(state => state.currentPlayerIndex);
+  const nextTurn = useGameStore(state => state.nextTurn);
+  const updateBalance = useGameStore(state => state.updateBalance);
+  const toggleJail = useGameStore(state => state.toggleJail);
   const currentPlayer = players[currentPlayerIndex];
 
   const [modalOpen, setModalOpen] = useState(false);
@@ -21,15 +25,15 @@ export const ActionCenter: React.FC = () => {
   // Manual Pass GO backup (hidden in UI but accessible if needed via other means? No, let's keep it simple)
   // We will replace the button with DiceRoller
 
-  const openPayModal = () => {
+  const openPayModal = useCallback(() => {
     setModalType('PAY');
     setModalOpen(true);
-  };
+  }, []);
   
-  const openReceiveModal = () => {
+  const openReceiveModal = useCallback(() => {
     setModalType('RECEIVE');
     setModalOpen(true);
-  };
+  }, []);
 
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 p-4 pb-8 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] z-50">
@@ -140,3 +144,5 @@ export const ActionCenter: React.FC = () => {
     </div>
   );
 };
+
+export const ActionCenter = React.memo(ActionCenterComponent);

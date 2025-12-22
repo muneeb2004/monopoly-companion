@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useGameStore } from '../store/gameStore';
 import { PlayerCard } from './PlayerCard';
 import { ActionCenter } from './ActionCenter';
@@ -7,12 +7,17 @@ import { PropertyManager } from './PropertyManager';
 import { BoardMap } from './BoardMap';
 
 
-export const Dashboard: React.FC = () => {
-  const { players, currentPlayerIndex, transactions, properties, trades, respondToTrade } = useGameStore();
+const DashboardComponent: React.FC = () => {
+  const players = useGameStore(state => state.players);
+  const currentPlayerIndex = useGameStore(state => state.currentPlayerIndex);
+  const transactions = useGameStore(state => state.transactions);
+  const properties = useGameStore(state => state.properties);
+  const trades = useGameStore(state => state.trades);
+  const respondToTrade = useGameStore(state => state.respondToTrade);
   const [showProperties, setShowProperties] = useState(false);
   const [showMap, setShowMap] = useState(false);
 
-  const currentPlayer = players[currentPlayerIndex];
+  const currentPlayer = useMemo(() => players[currentPlayerIndex], [players, currentPlayerIndex]);
 
   const getPlayerPropertyCount = (playerId: string) => {
     return properties.filter(p => p.ownerId === playerId).length;
@@ -181,3 +186,5 @@ export const Dashboard: React.FC = () => {
     </div>
   );
 };
+
+export const Dashboard = React.memo(DashboardComponent);

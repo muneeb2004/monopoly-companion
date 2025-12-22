@@ -10,7 +10,7 @@ interface PlayerCardProps {
   propertyCount: number;
 }
 
-export const PlayerCard: React.FC<PlayerCardProps> = ({ player, isCurrentTurn, propertyCount }) => {
+const PlayerCardComponent: React.FC<PlayerCardProps> = ({ player, isCurrentTurn, propertyCount }) => {
   const properties = useGameStore((state) => state.properties);
   const netWorth = calculateNetWorth(player, properties);
   const token = getTokenById(player.token || 'dog');
@@ -78,3 +78,5 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({ player, isCurrentTurn, p
     </div>
   );
 };
+
+export const PlayerCard = React.memo(PlayerCardComponent);

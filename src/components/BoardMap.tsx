@@ -10,8 +10,11 @@ interface BoardMapProps {
   isSpectator?: boolean;
 }
 
-export const BoardMap: React.FC<BoardMapProps> = ({ isOpen, onClose, isSpectator = false }) => {
-  const { players, properties } = useGameStore();
+const BoardMapComponent: React.FC<BoardMapProps> = ({ isOpen, onClose, isSpectator = false }) => {
+  const players = useGameStore(state => state.players);
+  const properties = useGameStore(state => state.properties);
+  
+  if (!isOpen) return null;
 
   if (!isOpen) return null;
 
@@ -138,3 +141,5 @@ export const BoardMap: React.FC<BoardMapProps> = ({ isOpen, onClose, isSpectator
     </div>
   );
 };
+
+export const BoardMap = React.memo(BoardMapComponent);

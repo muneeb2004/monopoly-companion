@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useGameStore } from '../store/gameStore';
 import { calculateRent } from '../lib/utils';
 import { cn } from '../lib/utils';
@@ -8,8 +8,14 @@ interface DiceRollerProps {
   onRollComplete: (landedPropertyId: number) => void;
 }
 
-export const DiceRoller: React.FC<DiceRollerProps> = ({ onRollComplete }) => {
-  const { players, properties, currentPlayerIndex, movePlayer, updateBalance, diceMode, setDiceMode } = useGameStore();
+const DiceRollerComponent: React.FC<DiceRollerProps> = ({ onRollComplete }) => {
+  const players = useGameStore(state => state.players);
+  const properties = useGameStore(state => state.properties);
+  const currentPlayerIndex = useGameStore(state => state.currentPlayerIndex);
+  const movePlayer = useGameStore(state => state.movePlayer);
+  const updateBalance = useGameStore(state => state.updateBalance);
+  const diceMode = useGameStore(state => state.diceMode);
+  const setDiceMode = useGameStore(state => state.setDiceMode);
   const currentPlayer = players[currentPlayerIndex];
 
   const [rolling, setRolling] = useState(false);
@@ -36,11 +42,11 @@ export const DiceRoller: React.FC<DiceRollerProps> = ({ onRollComplete }) => {
     }
   }, [diceMode]);
 
-  const toggleMode = async (e: React.MouseEvent) => {
+  const toggleMode = useCallback(async (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent triggering parent clicks if any
     const newMode = diceMode === 'DIGITAL' ? 'PHYSICAL' : 'DIGITAL';
     await setDiceMode(newMode);
-  };
+  }, [diceMode, setDiceMode]);
 
   const startDigitalRoll = () => {
     if (rolling || showResult) return;
@@ -259,3 +265,5 @@ export const DiceRoller: React.FC<DiceRollerProps> = ({ onRollComplete }) => {
     </div>
   );
 };
+
+export const DiceRoller = React.memo(DiceRollerComponent);

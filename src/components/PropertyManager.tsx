@@ -26,10 +26,18 @@ const GROUP_COLORS: Record<string, string> = {
   tax: 'bg-slate-200 text-slate-500',
 };
 
-export const PropertyManager: React.FC<PropertyManagerProps> = ({ isOpen, onClose }) => {
-  const { properties, players, assignProperty, toggleMortgage, improveProperty } = useGameStore();
+const PropertyManagerComponent: React.FC<PropertyManagerProps> = ({ isOpen, onClose }) => {
+  const properties = useGameStore(state => state.properties);
+  const players = useGameStore(state => state.players);
+  const assignProperty = useGameStore(state => state.assignProperty);
+  const toggleMortgage = useGameStore(state => state.toggleMortgage);
+  const improveProperty = useGameStore(state => state.improveProperty);
   const [filter, setFilter] = useState('all');
   const [expandedId, setExpandedId] = useState<number | null>(null);
+
+  // Render counter for tests (only exposed in test env)
+  const renderRef = React.useRef(0);
+  renderRef.current++;
 
   if (!isOpen) return null;
 
@@ -45,7 +53,7 @@ export const PropertyManager: React.FC<PropertyManagerProps> = ({ isOpen, onClos
   });
 
   return (
-    <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div data-render-count={process.env.NODE_ENV === 'test' ? renderRef.current : undefined} className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
       <div className="bg-white w-full max-w-lg h-[90vh] sm:h-[80vh] rounded-t-2xl sm:rounded-2xl flex flex-col shadow-2xl animate-in slide-in-from-bottom-10 fade-in duration-300">
         
         <div className="p-4 border-b border-slate-100 flex items-center justify-between">
@@ -193,3 +201,5 @@ export const PropertyManager: React.FC<PropertyManagerProps> = ({ isOpen, onClos
     </div>
   );
 };
+
+export const PropertyManager = React.memo(PropertyManagerComponent);

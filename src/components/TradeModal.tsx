@@ -9,8 +9,11 @@ interface TradeModalProps {
   onClose: () => void;
 }
 
-export const TradeModal: React.FC<TradeModalProps> = ({ isOpen, onClose }) => {
-  const { players, properties, currentPlayerIndex, createTrade } = useGameStore();
+const TradeModalComponent: React.FC<TradeModalProps> = ({ isOpen, onClose }) => {
+  const players = useGameStore(state => state.players);
+  const properties = useGameStore(state => state.properties);
+  const currentPlayerIndex = useGameStore(state => state.currentPlayerIndex);
+  const createTrade = useGameStore(state => state.createTrade);
   const currentPlayer = players[currentPlayerIndex];
   
   const [receiverId, setReceiverId] = useState<string>('');
@@ -195,3 +198,5 @@ export const TradeModal: React.FC<TradeModalProps> = ({ isOpen, onClose }) => {
     </div>
   );
 };
+
+export const TradeModal = React.memo(TradeModalComponent);

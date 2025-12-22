@@ -4,11 +4,17 @@ import { Plus, Play, Users, Dices, Keyboard } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { GAME_TOKENS, getTokenById } from '../data/tokens';
 
-export const SetupScreen: React.FC = () => {
-  const { players, addPlayer, startGame } = useGameStore();
+const SetupScreenComponent: React.FC = () => {
+  const players = useGameStore(state => state.players);
+  const addPlayer = useGameStore(state => state.addPlayer);
+  const startGame = useGameStore(state => state.startGame);
   const [newName, setNewName] = useState('');
   const [selectedTokenId, setSelectedTokenId] = useState(GAME_TOKENS[0].id);
   const [diceMode, setDiceMode] = useState<'DIGITAL' | 'PHYSICAL'>('DIGITAL');
+
+  // Render counter for tests
+  const renderRef = React.useRef(0);
+  renderRef.current++;
 
   const handleAddPlayer = (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,7 +29,7 @@ export const SetupScreen: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+    <div data-render-count={process.env.NODE_ENV === 'test' ? renderRef.current : undefined} className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md border border-slate-200">
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4">
@@ -168,3 +174,5 @@ export const SetupScreen: React.FC = () => {
     </div>
   );
 };
+
+export const SetupScreen = React.memo(SetupScreenComponent);

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useGameStore } from '../store/gameStore';
 import { X, Delete, Calculator } from 'lucide-react';
 import { cn } from '../lib/utils';
@@ -8,15 +8,17 @@ interface CalculatorModalProps {
   onClose: () => void;
 }
 
-export const CalculatorModal: React.FC<CalculatorModalProps> = ({ isOpen, onClose }) => {
-  const { players, currentPlayerIndex, updateBalance } = useGameStore();
+const CalculatorModalComponent: React.FC<CalculatorModalProps> = ({ isOpen, onClose }) => {
+  const players = useGameStore(state => state.players);
+  const currentPlayerIndex = useGameStore(state => state.currentPlayerIndex);
+  const updateBalance = useGameStore(state => state.updateBalance);
   
   // Default to current player
   const [selectedPlayerId, setSelectedPlayerId] = useState<string>('');
   const [value, setValue] = useState<string>('0');
   
   // Update selected player when modal opens or current player changes
-  React.useEffect(() => {
+  useEffect(() => {
     if (isOpen && players.length > 0) {
       setSelectedPlayerId(players[currentPlayerIndex].id);
       setValue('0');
@@ -165,3 +167,5 @@ export const CalculatorModal: React.FC<CalculatorModalProps> = ({ isOpen, onClos
     </div>
   );
 };
+
+export const CalculatorModal = React.memo(CalculatorModalComponent);
