@@ -343,13 +343,18 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
   setPropertyOverride: async (propertyId, priceOverride = null, rentOverride = null) => {
     const { gameId, properties } = get();
-    // Update DB
+
+    // sanitize values
+    const sanitizedPrice = (typeof priceOverride === 'number' && Number.isFinite(priceOverride)) ? priceOverride : null;
+    const sanitizedRent = Array.isArray(rentOverride) ? rentOverride.map(Number).filter(n => Number.isFinite(n)) : null;
+
+    // Update DB (use null to clear)
     if (gameId && supabase) {
-      await supabase.from('game_properties').update({ price_override: priceOverride, rent_override: rentOverride }).match({ game_id: gameId, property_index: propertyId });
+      await supabase.from('game_properties').update({ price_override: sanitizedPrice, rent_override: sanitizedRent }).match({ game_id: gameId, property_index: propertyId });
     }
 
-    // Update local state
-    set({ properties: properties.map(p => p.id === propertyId ? { ...p, priceOverride: priceOverride === null ? undefined : priceOverride, rentOverride: rentOverride === null ? undefined : rentOverride } : p) });
+    // Update local state (use undefined to mean no override)
+    set({ properties: properties.map(p => p.id === propertyId ? { ...p, priceOverride: sanitizedPrice === null ? undefined : sanitizedPrice, rentOverride: sanitizedRent === null ? undefined : sanitizedRent } : p) });
   },
 
   applySettingsToProperties: () => {

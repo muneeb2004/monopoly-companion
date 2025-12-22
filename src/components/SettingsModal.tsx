@@ -25,6 +25,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
     const p = (useGameStore.getState().properties || []).map(pr => ({ id: pr.id, name: pr.name, priceOverride: pr.priceOverride ?? '', rentOverride: pr.rentOverride ? pr.rentOverride.join(',') : '' }));
     return p;
   });
+  const [saving, setSaving] = useState(false);
+  const [saveMessage, setSaveMessage] = useState<string | null>(null);
 
   useEffect(() => {
     setSm(startingMoney);
@@ -36,17 +38,31 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
   if (!isOpen) return null;
 
   const save = async () => {
-    await setStartingMoney(sm);
-    await setMultipliers(pm, rm);
-    // Persist per-property overrides
-    for (const o of propOverrides) {
-      const priceVal = o.priceOverride === '' ? null : Number(o.priceOverride);
-      const rentVal = o.rentOverride === '' ? null : o.rentOverride.split(',').map(s => Number(s.trim()));
-      await useGameStore.getState().setPropertyOverride(o.id, priceVal, rentVal);
-    }
+    setSaving(true);
+    setSaveMessage(null);
+    try {
+      await setStartingMoney(sm);
+      await setMultipliers(pm, rm);
+      // Persist per-property overrides
+      for (const o of propOverrides) {
+        const priceVal = o.priceOverride === '' ? null : Number(o.priceOverride);
+        const rentVal = o.rentOverride === '' ? null : o.rentOverride.split(',').map(s => Number(s.trim()));
+        await useGameStore.getState().setPropertyOverride(o.id, priceVal, rentVal);
+      }
 
-    applySettingsToProperties();
-    onClose();
+      applySettingsToProperties();
+      setSaveMessage('Saved');
+      // briefly show success then close
+      setTimeout(() => {
+        setSaving(false);
+        setSaveMessage(null);
+        onClose();
+      }, 800);
+    } catch (err) {
+      console.error(err);
+      setSaving(false);
+      setSaveMessage('Failed to save');
+    }
   };
 
   const reset = async () => {
@@ -105,11 +121,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
 
         </div>
 
-        <div className="p-4 border-t border-slate-100 flex gap-2">
-          <button onClick={reset} className="px-4 py-2 rounded-xl bg-red-50 text-red-700 font-bold">Reset</button>
+        <div className="p-4 border-t border-slate-100 flex items-center gap-2">
+          <button onClick={reset} disabled={saving} className="px-4 py-2 rounded-xl bg-red-50 text-red-700 font-bold disabled:opacity-50">Reset</button>
           <div className="flex-1" />
-          <button onClick={onClose} className="px-4 py-2 rounded-xl bg-slate-100">Cancel</button>
-          <button onClick={save} className="px-4 py-2 rounded-xl bg-slate-900 text-white font-bold">Save</button>
+          <button onClick={onClose} disabled={saving} className="px-4 py-2 rounded-xl bg-slate-100 disabled:opacity-50">Cancel</button>
+          <button onClick={save} disabled={saving} className="px-4 py-2 rounded-xl bg-slate-900 text-white font-bold disabled:opacity-50">
+            {saving ? 'Saving...' : 'Save'}
+          </button>
+          {saveMessage && <div className={`text-sm font-medium ${saveMessage === 'Saved' ? 'text-green-600' : 'text-red-600'}`}>{saveMessage}</div>}
         </div>
       </div>
     </div>
