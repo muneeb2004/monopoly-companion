@@ -7,6 +7,18 @@ import { Plus, Users, Loader2, ArrowRight, Eye } from 'lucide-react';
 
 function App() {
   const { gameStatus, gameId, isLoading, error, createNewGame, joinGame } = useGameStore();
+
+  // Test-only: allow e2e initialisation via URL params (e.g. ?e2e=true&players=2)
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('e2e') === 'true') {
+      const count = Number(params.get('players') || 0);
+      const players = Array.from({ length: count }).map((_, i) => ({ id: `p${i+1}`, name: `P${i+1}`, color: '#000', token: 'dog', balance: 1500, position: 0, isJailed: false, jailTurns: 0, getOutOfJailCards: 0, loans: 0 }));
+      const autoStart = params.get('autostart') === 'true' || params.get('autoActive') === 'true';
+      useGameStore.setState({ gameStatus: autoStart ? 'ACTIVE' : 'SETUP', gameId: 'e2e-1', players, currentPlayerIndex: 0 });
+    }
+  }, []);
   const [joinId, setJoinId] = useState('');
   const [isSpectator, setIsSpectator] = useState(false);
   const [isRestoring, setIsRestoring] = useState(() => !!localStorage.getItem('monopoly_game_id'));

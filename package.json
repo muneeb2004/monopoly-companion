@@ -9,6 +9,7 @@
     "lint": "eslint .",
     "test": "vitest",
     "test:ci": "vitest run",
+    "test:e2e": "playwright test",
     "preview": "vite preview",
     "postbuild": "node scripts/create-icons.cjs && node scripts/generate-sw.cjs"
   },
@@ -25,6 +26,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
+    "@playwright/test": "^1.57.0",
     "@tailwindcss/postcss": "^4.1.18",
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^14.3.1",
