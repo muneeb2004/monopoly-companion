@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useGameStore } from '../store/gameStore';
-import { X, Landmark, TrendingUp } from 'lucide-react';
+import { X, Landmark } from 'lucide-react';
 
 interface LoanModalProps {
   isOpen: boolean;
