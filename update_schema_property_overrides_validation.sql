@@ -30,7 +30,7 @@ BEGIN
   -- Add helper function and rent_override check if missing (functions allowed in CHECK)
   IF NOT EXISTS (SELECT 1 FROM pg_proc WHERE proname = 'rent_override_nonneg') THEN
     CREATE OR REPLACE FUNCTION public.rent_override_nonneg(rent jsonb) RETURNS boolean
-    LANGUAGE plpgsql IMMUTABLE STRICT AS $$
+    LANGUAGE plpgsql IMMUTABLE STRICT AS $fn$
     DECLARE
       rec jsonb;
     BEGIN
@@ -47,7 +47,7 @@ BEGIN
       END LOOP;
       RETURN TRUE;
     END;
-    $$;
+    $fn$;
   END IF;
 
   IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'game_properties_rent_override_nonnegative') THEN
