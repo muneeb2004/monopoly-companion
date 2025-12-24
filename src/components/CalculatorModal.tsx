@@ -95,6 +95,9 @@ const CalculatorModalComponent: React.FC<CalculatorModalProps> = ({ isOpen, onCl
 
   const selectedPlayer = players.find(p => p.id === selectedPlayerId);
 
+  // Only render when the modal is open
+  if (!isOpen) return null;
+
   return (
     <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
