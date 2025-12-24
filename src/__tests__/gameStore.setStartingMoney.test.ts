@@ -11,6 +11,7 @@ vi.mock('../lib/supabase', () => {
 
 // Import the mocked supabase object
 import { supabase } from '../lib/supabase';
+const sb = supabase as any; // narrow for tests (mocked above)
 
 describe('gameStore.setStartingMoney', () => {
   beforeEach(() => {
@@ -35,20 +36,20 @@ describe('gameStore.setStartingMoney', () => {
     expect(state.players.every(p => p.balance === 2000)).toBe(true);
 
     // Verify supabase calls: one for games and one per player for players update
-    expect(supabase.from).toHaveBeenCalledWith('games');
-    expect(supabase.from).toHaveBeenCalledWith('players');
+    expect(sb.from).toHaveBeenCalledWith('games');
+    expect(sb.from).toHaveBeenCalledWith('players');
 
-    const mockFrom = (supabase.from as unknown as jest.Mock);
+    const mockFrom = (sb.from as unknown as any);
     // There should be 1 + players.length calls to "from": one for games update and one per player
     expect(mockFrom.mock.calls.length).toBe(1 + state.players.length);
 
     // Access the returned object's update mock to inspect update calls
     const returned = mockFrom.mock.results[0].value;
-    const updateMock = returned.update as unknown as jest.Mock;
+    const updateMock = returned.update as unknown as any;
 
     // Ensure at least one update call used starting_money and at least one used balance
-    const updateArgs = (updateMock.mock.calls || []).map(c => c[0]);
-    expect(updateArgs.some(a => a && a.starting_money === 2000)).toBe(true);
-    expect(updateArgs.some(a => a && a.balance === 2000)).toBe(true);
+    const updateArgs = (updateMock.mock.calls || []).map((c: any) => c[0]);
+    expect(updateArgs.some((a: any) => a && a.starting_money === 2000)).toBe(true);
+    expect(updateArgs.some((a: any) => a && a.balance === 2000)).toBe(true);
   });
 });
