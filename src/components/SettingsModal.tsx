@@ -94,6 +94,15 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
     onClose();
   };
 
+  const [showEndConfirm, setShowEndConfirm] = React.useState(false);
+  const endAndRestart = useGameStore(state => state.endAndRestart);
+
+  const handleEndAndRestart = async () => {
+    if (typeof endAndRestart === 'function') await endAndRestart();
+    setShowEndConfirm(false);
+    onClose();
+  };
+
   return (
     <BottomSheet isOpen={isOpen} onClose={onClose} title={<><Settings2 size={20} /><span>Game Settings</span></>}>
       <div className="space-y-4">
@@ -172,6 +181,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
 
         <div className="p-4 border-t border-slate-100 flex items-center gap-2 sticky sm:static bottom-0 bg-white z-10">
           <button onClick={reset} disabled={saving} className="px-4 py-2 rounded-xl bg-red-50 text-red-700 font-bold disabled:opacity-50">Reset</button>
+
+          {/* End and restart button - opens a confirmation */}
+          <button onClick={() => setShowEndConfirm(true)} disabled={saving} className="px-4 py-2 rounded-xl bg-red-600 text-white font-bold hover:bg-red-700 disabled:opacity-50">
+            End Game & Restart
+          </button>
+
           <div className="flex-1" />
           <button onClick={onClose} disabled={saving} className="px-4 py-2 rounded-xl bg-slate-100 disabled:opacity-50">Cancel</button>
           <button onClick={save} disabled={saving} className="px-4 py-2 rounded-xl bg-slate-900 text-white font-bold disabled:opacity-50">
@@ -179,6 +194,20 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
           </button>
           {saveMessage && <div className={`text-sm font-medium ${saveMessage === 'Saved' ? 'text-green-600' : 'text-red-600'}`}>{saveMessage}</div>}
         </div>
+
+        {/* End & Restart confirmation */}
+        {showEndConfirm && (
+          <div role="dialog" aria-modal="true" className="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-lg p-6 w-full max-w-sm">
+              <h3 className="text-lg font-bold mb-2 text-red-700">End Game & Restart</h3>
+              <p className="text-sm text-slate-600 mb-4">This will end the current game and return you to the setup screen where players will be preserved and ready for editing. Continue?</p>
+              <div className="flex gap-2">
+                <button onClick={() => setShowEndConfirm(false)} className="flex-1 px-4 py-2 rounded bg-slate-100">Cancel</button>
+                <button onClick={handleEndAndRestart} className="flex-1 px-4 py-2 rounded bg-red-600 text-white">End & Restart</button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </BottomSheet>
   );

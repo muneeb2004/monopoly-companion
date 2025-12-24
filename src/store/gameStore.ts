@@ -27,6 +27,8 @@ interface GameStore extends GameState {
   takeLoan: (playerId: string, amount: number) => Promise<void>;
   repayLoan: (playerId: string, amount: number) => Promise<void>;
   resetGame: () => Promise<void>;
+  // End the current game and return to setup with players preserved for editing
+  endAndRestart: () => Promise<void>;
 
   // Trade Actions
   createTrade: (receiverId: string, offeredMoney: number, requestedMoney: number, offeredProperties: number[], requestedProperties: number[]) => Promise<void>;
@@ -690,6 +692,32 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
   resetGame: async () => {
     get().leaveGame();
+  },
+
+  endAndRestart: async () => {
+    // Preserve current players, but reset balances and game-specific flags so they can be edited in Setup
+    const prevPlayers = get().players || [];
+    const startingMoney = get().startingMoney ?? 1500;
+
+    const resetPlayers = prevPlayers.map(p => ({
+      ...p,
+      balance: startingMoney,
+      position: 0,
+      isJailed: false,
+      jailTurns: 0,
+      getOutOfJailCards: 0,
+      loans: 0
+    }));
+
+    // Unsubscribe and clear long-lived session state
+    get().leaveGame();
+
+    // Move to SETUP with preserved players (now editable) and reset other game state
+    set({
+      ...INITIAL_STATE,
+      players: resetPlayers,
+      gameStatus: 'SETUP'
+    });
   },
 
   createTrade: async (receiverId, offeredMoney, requestedMoney, offeredProperties, requestedProperties) => {
