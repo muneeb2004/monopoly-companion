@@ -1,5 +1,4 @@
 import React, { useEffect, useRef } from 'react';
-import { ErrorBoundary } from './ErrorBoundary';
 
 interface BottomSheetProps {
   isOpen: boolean;
@@ -64,11 +63,7 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({ isOpen, onClose, title
           </button>
         </div>
 
-        <div className="p-4 overflow-auto">{/* Error boundary wraps modal content to show helpful message instead of blank screen on render error */}
-          <ErrorBoundary>
-            {children}
-          </ErrorBoundary>
-        </div>
+        <div className="p-4 overflow-auto">{children}</div>
       </div>
     </div>
   );

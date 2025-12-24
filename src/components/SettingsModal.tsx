@@ -3,7 +3,6 @@ import { Settings2 } from 'lucide-react';
 import { useGameStore } from '../store/gameStore';
 import { BottomSheet } from './BottomSheet';
 import { formatNumberInput } from '../lib/utils';
-import { ErrorBoundary } from './ErrorBoundary';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -49,9 +48,6 @@ const SettingsModalInner: React.FC<SettingsModalProps> = ({ isOpen, onClose }) =
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
 
   useEffect(() => {
-    // Dev log: SettingsModal mount/update
-    console.log('[DEBUG] SettingsModal mounted/updated', { isOpen, startingMoney, jailBailAmount, bankTotal });
-
     setSm(String(startingMoney));
     setJba(String(jailBailAmount));
     setBt(String(bankTotal));
@@ -62,6 +58,9 @@ const SettingsModalInner: React.FC<SettingsModalProps> = ({ isOpen, onClose }) =
     setRentCalcMode(useGameStore.getState().groupHouseRentMode ?? 'standard');
     setPropOverrides((useGameStore.getState().properties || []).map(pr => ({ id: pr.id, name: pr.name, priceOverride: pr.priceOverride ?? '', rentOverride: pr.rentOverride ? pr.rentOverride.join(',') : '' })));
   }, [isOpen, startingMoney, jailBailAmount, bankTotal, bankLowThreshold, priceMultiplier, rentMultiplier]);
+
+  const [showEndConfirm, setShowEndConfirm] = React.useState(false);
+  const endAndRestart = useGameStore(state => state.endAndRestart);
 
   if (!isOpen) return null;
 
@@ -105,9 +104,6 @@ const SettingsModalInner: React.FC<SettingsModalProps> = ({ isOpen, onClose }) =
     await resetSettings();
     onClose();
   };
-
-  const [showEndConfirm, setShowEndConfirm] = React.useState(false);
-  const endAndRestart = useGameStore(state => state.endAndRestart);
 
   const handleEndAndRestart = async () => {
     if (typeof endAndRestart === 'function') await endAndRestart();
@@ -240,36 +236,5 @@ const SettingsModalInner: React.FC<SettingsModalProps> = ({ isOpen, onClose }) =
 };
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
-  // Dev-only safe fallback: set `window.__DEBUG_SETTINGS_SAFE = true` in the console
-  // to render a simple static panel which helps isolate render errors.
-  if (typeof window !== 'undefined' && (window as any).__DEBUG_SETTINGS_SAFE) {
-    return (
-      <BottomSheet isOpen={isOpen} onClose={onClose} title={<><Settings2 size={20} /><span>Game Settings (DEBUG)</span></>} className="max-w-3xl">
-        <div className="p-6">
-          <h3 className="text-lg font-bold">Debug Settings</h3>
-          <p className="text-sm text-slate-500 mt-2">This is a minimal fallback to verify that the modal container and overlay are working.</p>
-          <div className="mt-4">
-            <button onClick={onClose} className="px-3 py-2 bg-slate-200 rounded">Close</button>
-          </div>
-        </div>
-      </BottomSheet>
-    );
-  }
-
-  try {
-    return (
-      <ErrorBoundary>
-        <SettingsModalInner isOpen={isOpen} onClose={onClose} />
-      </ErrorBoundary>
-    );
-  } catch (err: any) {
-    console.error('SettingsModal render caught:', err);
-    return (
-      <div className="p-6">
-        <h3 className="text-lg font-bold text-red-700">Settings failed to render</h3>
-        <p className="text-sm text-slate-500 mt-2">An error occurred while opening settings. Check the console for details.</p>
-        <pre className="mt-3 text-xs text-slate-700 bg-slate-100 p-2 rounded">{String(err?.message || err)}</pre>
-      </div>
-    );
-  }
+  return <SettingsModalInner isOpen={isOpen} onClose={onClose} />;
 };

@@ -21,12 +21,7 @@ const DashboardComponent: React.FC = () => {
   const [showMap, setShowMap] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
 
-  // Open settings when dev global event is emitted
-  React.useEffect(() => {
-    const handler = () => setShowSettings(true);
-    window.addEventListener('openDebugSettings', handler);
-    return () => window.removeEventListener('openDebugSettings', handler);
-  }, []);
+
   const [copied, setCopied] = useState(false);
 
   const renderRef = React.useRef(1);
