@@ -205,7 +205,7 @@ const SettingsModalInner: React.FC<SettingsModalProps> = ({ isOpen, onClose }) =
           </div>
         </div>
 
-        <div className="p-4 border-t border-slate-100 flex items-center gap-2 sticky sm:static bottom-0 bg-white z-10">
+        <div className="p-4 border-t border-slate-100 flex items-center gap-2 bg-white z-10">
           <button onClick={reset} disabled={saving} className="px-4 py-2 rounded-xl bg-red-50 text-red-700 font-bold disabled:opacity-50">Reset</button>
 
           {/* End and restart button - opens a confirmation */}
