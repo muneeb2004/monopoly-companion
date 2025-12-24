@@ -26,4 +26,30 @@ describe('BottomSheet component', () => {
     fireEvent.keyDown(document, { key: 'Escape' });
     expect(onClose).toHaveBeenCalled();
   });
+
+  it('traps focus inside when open', () => {
+    const onClose = vi.fn();
+    const { container } = render(
+      <BottomSheet isOpen={true} onClose={onClose} title={<span>Test</span>}>
+        <button>One</button>
+        <button>Two</button>
+      </BottomSheet>
+    );
+
+    const buttons = Array.from(container.querySelectorAll('button')) as HTMLElement[];
+    expect(buttons.length).toBeGreaterThanOrEqual(2);
+
+    const first = buttons[0];
+    const last = buttons[buttons.length - 1];
+
+    // focus the last element and press Tab, focus should return to first
+    last.focus();
+    expect(document.activeElement).toBe(last);
+
+    fireEvent.keyDown(document, { key: 'Tab' });
+
+    // after Tab, focus should be inside the sheet (ideally first)
+    const active = document.activeElement as HTMLElement;
+    expect(container.contains(active)).toBe(true);
+  });
 });

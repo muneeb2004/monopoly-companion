@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useGameStore } from '../store/gameStore';
 import { X, ArrowRightLeft } from 'lucide-react';
-
+import { formatNumberInput } from '../lib/utils';
 interface TransferModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -68,6 +68,7 @@ export const TransferModal: React.FC<TransferModalProps> = ({ isOpen, onClose, t
               placeholder="0"
               autoFocus
             />
+            {amount !== '' && <div className="text-xs text-slate-400 mt-1">Formatted: {formatNumberInput(amount)}</div>}
           </div>
 
           {type === 'PAY' && (

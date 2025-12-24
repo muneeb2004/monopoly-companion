@@ -31,6 +31,17 @@ describe('SettingsModal UI', () => {
     expect(p?.priceOverride).toBe(250);
   });
 
+  it('shows formatted hint for starting money input', () => {
+    const onClose = vi.fn();
+    render(<SettingsModal isOpen={true} onClose={onClose} />);
+
+    const smInput = screen.getByLabelText('Starting Money') as HTMLInputElement;
+    fireEvent.change(smInput, { target: { value: '2000' } });
+
+    // The formatted hint should be visible (at least one formatted hint present)
+    expect(screen.queryAllByText(/Formatted:/).length).toBeGreaterThan(0);
+  });
+
   it('stacks bank threshold inputs on mobile and aligns modal to bottom', () => {
     const onClose = vi.fn();
     const { container } = render(<SettingsModal isOpen={true} onClose={onClose} />);

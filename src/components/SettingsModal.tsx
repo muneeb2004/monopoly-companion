@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Settings2 } from 'lucide-react';
 import { useGameStore } from '../store/gameStore';
 import { BottomSheet } from './BottomSheet';
+import { formatNumberInput } from '../lib/utils';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -114,26 +115,40 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
           )}
         </div>
         <div>
-          <label className="block text-sm font-medium text-slate-700">Starting Money</label>
-            <input type="number" inputMode="numeric" pattern="[0-9]*" value={sm} onChange={(e) => setSm(e.target.value)} className="w-full mt-2 p-2 border rounded" />
+          <label htmlFor="starting-money" className="block text-sm font-medium text-slate-700">Starting Money</label>
+          <input
+            id="starting-money"
+            type="number"
+            inputMode="numeric"
+            pattern="[0-9]*"
+            value={sm}
+            onChange={(e) => setSm(e.target.value)}
+            className="w-full mt-2 p-2 border rounded"
+          />
           <div className="text-xs text-slate-400 mt-1">Default balance assigned to new players (default: 1500)</div>
+          {sm !== '' && (
+            <div className="text-xs text-slate-400 mt-1">Formatted: {formatNumberInput(sm)}</div>
+          )}
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-slate-700">Jail Bail Amount</label>
-            <input type="number" inputMode="numeric" pattern="[0-9]*" value={jba} onChange={(e) => setJba(e.target.value)} className="w-full mt-2 p-2 border rounded" />
+          <label htmlFor="jail-bail-amount" className="block text-sm font-medium text-slate-700">Jail Bail Amount</label>
+            <input id="jail-bail-amount" type="number" inputMode="numeric" pattern="[0-9]*" value={jba} onChange={(e) => setJba(e.target.value)} className="w-full mt-2 p-2 border rounded" />
           <div className="text-xs text-slate-400 mt-1">Cost to leave jail immediately (default: 50)</div>
+          {jba !== '' && <div className="text-xs text-slate-400 mt-1">Formatted: {formatNumberInput(jba)}</div>}
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-slate-700">Bank Total</label>
-            <input type="number" inputMode="numeric" pattern="[0-9]*" value={bt} onChange={(e) => setBt(e.target.value)} className="w-full mt-2 p-2 border rounded" />
+<label htmlFor="bank-total" className="block text-sm font-medium text-slate-700">Bank Total</label>
+            <input id="bank-total" type="number" inputMode="numeric" pattern="[0-9]*" value={bt} onChange={(e) => setBt(e.target.value)} className="w-full mt-2 p-2 border rounded" />
+            {bt !== '' && <div className="text-xs text-slate-400 mt-1">Formatted: {formatNumberInput(bt)}</div>}
 
           <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium text-slate-700">Low-bank threshold</label>
-                <input type="number" inputMode="numeric" pattern="[0-9]*" value={bth} onChange={(e) => setBth(e.target.value)} className="w-full mt-2 p-2 border rounded" />
+              <label htmlFor="low-bank-threshold" className="block text-sm font-medium text-slate-700">Low-bank threshold</label>
+                <input id="low-bank-threshold" type="number" inputMode="numeric" pattern="[0-9]*" value={bth} onChange={(e) => setBth(e.target.value)} className="w-full mt-2 p-2 border rounded" />
               <div className="text-xs text-slate-400 mt-1">Below this amount the low-bank indicator will display (default: 10000)</div>
+              {bth !== '' && <div className="text-xs text-slate-400 mt-1">Formatted: {formatNumberInput(bth)}</div>}
             </div>
 
             <div className="flex items-center gap-2">
@@ -144,14 +159,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-slate-700">Property Price Multiplier</label>
-            <input type="number" step="0.1" inputMode="decimal" pattern="[0-9]*[.,]?[0-9]*" value={pm} onChange={(e) => setPm(e.target.value)} className="w-full mt-2 p-2 border rounded" />
+          <label htmlFor="property-price-multiplier" className="block text-sm font-medium text-slate-700">Property Price Multiplier</label>
+            <input id="property-price-multiplier" type="number" step="0.1" inputMode="decimal" pattern="[0-9]*[.,]?[0-9]*" value={pm} onChange={(e) => setPm(e.target.value)} className="w-full mt-2 p-2 border rounded" />
           <div className="text-xs text-slate-400 mt-1">Multiply base property prices (1 = no change)</div>
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-slate-700">Rent Multiplier</label>
-            <input type="number" step="0.1" inputMode="decimal" pattern="[0-9]*[.,]?[0-9]*" value={rm} onChange={(e) => setRm(e.target.value)} className="w-full mt-2 p-2 border rounded" />
+          <label htmlFor="rent-multiplier" className="block text-sm font-medium text-slate-700">Rent Multiplier</label>
+            <input id="rent-multiplier" type="number" step="0.1" inputMode="decimal" pattern="[0-9]*[.,]?[0-9]*" value={rm} onChange={(e) => setRm(e.target.value)} className="w-full mt-2 p-2 border rounded" />
           <div className="text-xs text-slate-400 mt-1">Multiply base rent values (1 = no change)</div>
         </div>
 

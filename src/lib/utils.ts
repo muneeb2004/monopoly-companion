@@ -23,6 +23,13 @@ export function calculateNetWorth(player: Player, properties: Property[]): numbe
   return netWorth;
 }
 
+export function formatNumberInput(value: string | number | null | undefined) {
+  if (value === null || value === undefined || value === '') return '';
+  const n = Number(String(value).replace(/[^0-9.-]+/g, ''));
+  if (!Number.isFinite(n)) return '';
+  return n.toLocaleString();
+}
+
 export function calculateRent(targetProperty: Property, allProperties: Property[], diceRoll: number = 7): number {
   if (!targetProperty.ownerId || targetProperty.isMortgaged) return 0;
 

@@ -96,6 +96,7 @@ export const LoanModal: React.FC<LoanModalProps> = ({ isOpen, onClose }) => {
               placeholder="0"
               autoFocus
             />
+            {amount !== '' && <div className="text-xs text-slate-400 mt-1">Formatted: {formatNumberInput(amount)}</div>}
           </div>
 
           <button
