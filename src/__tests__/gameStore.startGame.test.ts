@@ -5,7 +5,7 @@ vi.mock('../lib/supabase', () => {
   // We'll capture calls to insert
   const insertMock = vi.fn(async (payload: any) => ({ data: payload }));
   const updateMock = vi.fn(() => ({ eq: vi.fn(async () => ({ data: true })) }));
-  return { supabase: { from: (table: string) => ({ insert: insertMock, update: updateMock }) } };
+  return { supabase: { from: (_table: string) => ({ insert: insertMock, update: updateMock }) } };
 });
 
 describe('startGame persistence', () => {

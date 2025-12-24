@@ -19,8 +19,25 @@ describe('PropertyOverridesTab', () => {
     fireEvent.change(input, { target: { value: '999' } });
 
     // Confirm store updated (priceOverride is set)
-    const updated = useGameStore.getState().properties.find(pr => pr.id === p!.id);
+    let updated = useGameStore.getState().properties.find(pr => pr.id === p!.id);
     expect(updated?.priceOverride).toBe(999);
+
+    // Invalid price (negative) should show an error and not set override
+    fireEvent.change(input, { target: { value: '-10' } });
+    expect(screen.getByText(/Price must be a non-negative integer/i)).toBeTruthy();
+    updated = useGameStore.getState().properties.find(pr => pr.id === p!.id);
+    expect(updated?.priceOverride).toBe(999); // unchanged
+
+    // Non-integer should show error
+    fireEvent.change(input, { target: { value: '120.5' } });
+    expect(screen.getByText(/Price must be a non-negative integer/i)).toBeTruthy();
+    updated = useGameStore.getState().properties.find(pr => pr.id === p!.id);
+    expect(updated?.priceOverride).toBe(999);
+
+    // Valid price
+    fireEvent.change(input, { target: { value: '200' } });
+    const updatedValid = useGameStore.getState().properties.find(pr => pr.id === p!.id);
+    expect(updatedValid?.priceOverride).toBe(200);
 
     // Test rent overrides
     const rentInput = screen.getByLabelText(`rent-${p!.id}`) as HTMLInputElement;
