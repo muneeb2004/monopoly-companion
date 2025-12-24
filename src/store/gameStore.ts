@@ -85,7 +85,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   setToast: (message, duration = 3000) => {
     set({ toastMessage: message });
     if (message && duration > 0) {
-      const id = setTimeout(() => set({ toastMessage: null }), duration);
+      setTimeout(() => set({ toastMessage: null }), duration);
       // No cleanup needed for this simple impl; subsequent toasts overwrite message
     }
   },
@@ -734,7 +734,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     });
 
     // Notify the user
-    set(get => ({ toastMessage: 'Game ended — edit players to start again' }));
+    set({ toastMessage: 'Game ended — edit players to start again' });
   },
 
   createTrade: async (receiverId, offeredMoney, requestedMoney, offeredProperties, requestedProperties) => {

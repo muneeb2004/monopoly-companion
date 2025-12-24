@@ -128,8 +128,10 @@ const DiceRollerComponent: React.FC<DiceRollerProps> = ({ onRollComplete }) => {
 
     // Tax Logic
     let taxAmount = 0;
-    if (property.name === 'Income Tax') taxAmount = 200;
-    if (property.name === 'Luxury Tax') taxAmount = 100;
+    if (property.type === 'tax') {
+      if (property.name.includes('Income')) taxAmount = 200;
+      else taxAmount = 100; // e.g., "Super Tax" or other tax
+    }
 
     setLandedInfo({
       name: property.name,
