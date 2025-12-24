@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, act } from '@testing-library/react';
+import { render, screen, act } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
 import { UndoHistoryModal } from '../components/UndoHistoryModal';
 import { useGameStore } from '../store/gameStore';

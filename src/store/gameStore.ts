@@ -783,7 +783,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
     if (!supabase || !gameId) {
       // Local-only fallback: record a zero-amount UNDO transaction so it's visible in history
-      set({ transactions: [{ id: `local-undo-${timestamp}`, type: 'UNDO', amount: 0, fromId: playerId, toId: 'BANK', description, timestamp }, ...get().transactions].slice(0, 50) });
+      set({ transactions: [{ id: `local-undo-${timestamp}`, type: 'UNDO' as TransactionType, amount: 0, fromId: playerId, toId: 'BANK', description, timestamp } as Transaction, ...(get().transactions || [])].slice(0, 50) });
       return;
     }
 

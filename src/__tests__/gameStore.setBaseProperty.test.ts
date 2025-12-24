@@ -9,7 +9,8 @@ describe('setBaseProperty', () => {
   it('updates local property price/rent when supabase not present', async () => {
     await useGameStore.getState().setBaseProperty(1, 250, [25,50]);
     const p = useGameStore.getState().properties.find((p: any) => p.id === 1);
-    expect(p.price).toBe(250);
-    expect(p.rent).toEqual([25,50]);
+    expect(p).toBeDefined();
+    expect(p!.price).toBe(250);
+    expect(p!.rent).toEqual([25,50]);
   });
 });
