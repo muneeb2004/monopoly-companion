@@ -45,10 +45,11 @@ describe('gameStore.setStartingMoney', () => {
 
     // Access the returned object's update mock to inspect update calls
     const returned = mockFrom.mock?.results?.[0]?.value;
-    const updateMock = returned?.update as unknown as { mock?: { calls?: readonly unknown[] } };
+    const updateMock = returned?.update as unknown as { mock?: { calls?: readonly unknown[][] } } | undefined;
 
     // Ensure at least one update call used starting_money and at least one used balance
-    const updateArgs = (updateMock.mock.calls || []).map((c: readonly unknown[]) => c[0] as Record<string, unknown>);
+    const callsArray = (updateMock?.mock?.calls ?? []) as readonly unknown[][];
+    const updateArgs = callsArray.map(c => c[0] as Record<string, unknown>);
     expect(updateArgs.some(a => a && 'starting_money' in a && (a['starting_money'] as unknown) === 2000)).toBe(true);
     expect(updateArgs.some(a => a && 'balance' in a && (a['balance'] as unknown) === 2000)).toBe(true);
   });
