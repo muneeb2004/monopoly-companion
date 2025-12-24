@@ -31,4 +31,13 @@ describe('SetupScreen render behavior', () => {
     const afterPlayers = Number(root?.getAttribute('data-render-count'));
     expect(afterPlayers).toBeGreaterThan(initial);
   });
+
+  it('renders token grid with mobile-friendly columns (3 columns default)', () => {
+    useGameStore.setState({ players: [], properties: [] });
+    const { container } = render(<SetupScreen />);
+    const grid = container.querySelector('.grid');
+    expect(grid).toBeTruthy();
+    // Mobile-first: we expect the default column utility to be 3 columns
+    expect(grid?.className).toContain('grid-cols-3');
+  });
 });

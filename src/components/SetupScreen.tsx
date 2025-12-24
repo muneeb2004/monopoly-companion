@@ -33,10 +33,10 @@ const SetupScreenComponent: React.FC = () => {
   };
 
   return (
-    <div ref={rootRef} className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md border border-slate-200">
+    <div ref={rootRef} className="min-h-screen bg-slate-50 flex items-start sm:items-center justify-center p-4">
+      <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md sm:max-w-lg mt-6 sm:mt-0 border border-slate-200">
         <div className="text-center mb-8 relative">
-          <div className="absolute right-0 top-0">
+          <div className="absolute right-2 top-2">
             <button 
               onClick={() => setShowSettings(true)}
               className="p-2 bg-slate-50 text-slate-500 rounded-full hover:bg-slate-100 hover:text-slate-900 transition-colors"
@@ -67,7 +67,7 @@ const SetupScreenComponent: React.FC = () => {
             
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">Select Token</label>
-              <div className="grid grid-cols-4 gap-2">
+              <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
                 {GAME_TOKENS.map((token) => {
                   const isTaken = players.some(p => p.token === token.id);
                   const isSelected = selectedTokenId === token.id;

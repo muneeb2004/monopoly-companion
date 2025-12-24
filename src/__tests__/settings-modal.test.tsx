@@ -30,4 +30,18 @@ describe('SettingsModal UI', () => {
     const p = useGameStore.getState().properties.find(p => p.id === 1);
     expect(p?.priceOverride).toBe(250);
   });
+
+  it('stacks bank threshold inputs on mobile and aligns modal to bottom', () => {
+    const onClose = vi.fn();
+    const { container } = render(<SettingsModal isOpen={true} onClose={onClose} />);
+
+    // Modal overlay should use mobile-friendly alignment classes
+    const overlay = container.firstChild as HTMLElement;
+    expect(overlay?.className).toContain('items-end');
+
+    // The bank threshold area should stack on mobile (grid-cols-1 by default)
+    const bankGrid = container.querySelector('.mt-3.grid');
+    expect(bankGrid).toBeTruthy();
+    expect(bankGrid?.className).toContain('grid-cols-1');
+  });
 });
