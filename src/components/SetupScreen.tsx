@@ -9,7 +9,6 @@ const SetupScreenComponent: React.FC = () => {
   const players = useGameStore(state => state.players);
   const addPlayer = useGameStore(state => state.addPlayer);
   const startGame = useGameStore(state => state.startGame);
-  const startingMoney = useGameStore(state => state.startingMoney);
   const [newName, setNewName] = useState('');
   const [selectedTokenId, setSelectedTokenId] = useState(GAME_TOKENS[0].id);
   const [diceMode, setDiceMode] = useState<'DIGITAL' | 'PHYSICAL'>('DIGITAL');

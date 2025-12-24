@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useGameStore } from '../store/gameStore';
-import { X, ChevronDown, ChevronUp, Home, Ban, Trophy, Calculator } from 'lucide-react';
+import { X, ChevronDown, ChevronUp, Home, Ban, Trophy } from 'lucide-react';
 import { cn, calculateRent } from '../lib/utils';
 import type { Property } from '../types';
 

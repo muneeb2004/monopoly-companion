@@ -351,8 +351,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
       
       // If in setup mode, update existing players' balance to match new starting money
       if (gameStatus === 'SETUP') {
+        const client = supabase!;
         const updates = players.map(p => 
-          supabase.from('players').update({ balance: amount }).eq('id', p.id)
+          client.from('players').update({ balance: amount }).eq('id', p.id)
         );
         await Promise.all(updates);
         // Local state update handled by subscription usually, but we can do it optimistically
