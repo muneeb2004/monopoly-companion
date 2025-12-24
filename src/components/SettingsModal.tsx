@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { X, Settings2 } from 'lucide-react';
+import { Settings2 } from 'lucide-react';
 import { useGameStore } from '../store/gameStore';
+import { BottomSheet } from './BottomSheet';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -93,79 +94,66 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
   };
 
   return (
-    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-4">
-      <div className="bg-white rounded-t-2xl sm:rounded-2xl w-full max-w-md shadow-2xl flex flex-col overflow-hidden max-h-[90vh]">
-        <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-white sticky top-0 z-10">
-          <div className="flex items-center gap-2 text-slate-700 font-bold">
-            <Settings2 size={20} />
-            <span>Game Settings</span>
-          </div>
-          <button onClick={onClose} className="p-2 hover:bg-slate-200 rounded-full transition-colors text-slate-500">
-            <X size={20} />
-          </button>
+    <BottomSheet isOpen={isOpen} onClose={onClose} title={<><Settings2 size={20} /><span>Game Settings</span></>}>
+      <div className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium text-slate-700">Advanced: Individual Property Overrides</label>
+          <button onClick={() => setAdvancedOpen(prev => !prev)} className="mt-2 text-xs text-slate-500">{advancedOpen ? 'Hide' : 'Show'} property overrides</button>
+          {advancedOpen && (
+            <div className="mt-3 max-h-60 overflow-y-auto border border-slate-100 rounded p-2 bg-slate-50">
+              {propOverrides.map(o => (
+                <div key={o.id} className="p-2 border-b last:border-b-0">
+                  <div className="text-sm font-bold">{o.name}</div>
+                  <div className="flex flex-col sm:flex-row gap-2 mt-2">
+                    <input placeholder="Price override" value={o.priceOverride} onChange={(e) => setPropOverrides(prev => prev.map(p => p.id === o.id ? { ...p, priceOverride: e.target.value } : p))} className="p-1 border rounded w-full sm:w-32" />
+                    <input placeholder="Rent override (comma-separated)" value={o.rentOverride} onChange={(e) => setPropOverrides(prev => prev.map(p => p.id === o.id ? { ...p, rentOverride: e.target.value } : p))} className="p-1 border rounded flex-1 w-full" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-slate-700">Starting Money</label>
+          <input type="number" value={sm} onChange={(e) => setSm(e.target.value)} className="w-full mt-2 p-2 border rounded" />
+          <div className="text-xs text-slate-400 mt-1">Default balance assigned to new players (default: 1500)</div>
         </div>
 
-        <div className="p-4 space-y-4 overflow-auto">
-          <div>
-            <label className="block text-sm font-medium text-slate-700">Advanced: Individual Property Overrides</label>
-            <button onClick={() => setAdvancedOpen(prev => !prev)} className="mt-2 text-xs text-slate-500">{advancedOpen ? 'Hide' : 'Show'} property overrides</button>
-            {advancedOpen && (
-              <div className="mt-3 max-h-60 overflow-y-auto border border-slate-100 rounded p-2 bg-slate-50">
-                {propOverrides.map(o => (
-                  <div key={o.id} className="p-2 border-b last:border-b-0">
-                    <div className="text-sm font-bold">{o.name}</div>
-                    <div className="flex flex-col sm:flex-row gap-2 mt-2">
-                      <input placeholder="Price override" value={o.priceOverride} onChange={(e) => setPropOverrides(prev => prev.map(p => p.id === o.id ? { ...p, priceOverride: e.target.value } : p))} className="p-1 border rounded w-full sm:w-32" />
-                      <input placeholder="Rent override (comma-separated)" value={o.rentOverride} onChange={(e) => setPropOverrides(prev => prev.map(p => p.id === o.id ? { ...p, rentOverride: e.target.value } : p))} className="p-1 border rounded flex-1 w-full" />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-slate-700">Starting Money</label>
-            <input type="number" value={sm} onChange={(e) => setSm(e.target.value)} className="w-full mt-2 p-2 border rounded" />
-            <div className="text-xs text-slate-400 mt-1">Default balance assigned to new players (default: 1500)</div>
-          </div>
+        <div>
+          <label className="block text-sm font-medium text-slate-700">Jail Bail Amount</label>
+          <input type="number" value={jba} onChange={(e) => setJba(e.target.value)} className="w-full mt-2 p-2 border rounded" />
+          <div className="text-xs text-slate-400 mt-1">Cost to leave jail immediately (default: 50)</div>
+        </div>
 
-          <div>
-            <label className="block text-sm font-medium text-slate-700">Jail Bail Amount</label>
-            <input type="number" value={jba} onChange={(e) => setJba(e.target.value)} className="w-full mt-2 p-2 border rounded" />
-            <div className="text-xs text-slate-400 mt-1">Cost to leave jail immediately (default: 50)</div>
-          </div>
+        <div>
+          <label className="block text-sm font-medium text-slate-700">Bank Total</label>
+          <input type="number" value={bt} onChange={(e) => setBt(e.target.value)} className="w-full mt-2 p-2 border rounded" />
+          <div className="text-xs text-slate-400 mt-1">Total funds available in the bank (default: 100000)</div>
 
-          <div>
-            <label className="block text-sm font-medium text-slate-700">Bank Total</label>
-            <input type="number" value={bt} onChange={(e) => setBt(e.target.value)} className="w-full mt-2 p-2 border rounded" />
-            <div className="text-xs text-slate-400 mt-1">Total funds available in the bank (default: 100000)</div>
+          <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-sm font-medium text-slate-700">Low-bank threshold</label>
+              <input type="number" value={bth} onChange={(e) => setBth(e.target.value)} className="w-full mt-2 p-2 border rounded" />
+              <div className="text-xs text-slate-400 mt-1">Below this amount the low-bank indicator will display (default: 10000)</div>
+            </div>
 
-            <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className="block text-sm font-medium text-slate-700">Low-bank threshold</label>
-                <input type="number" value={bth} onChange={(e) => setBth(e.target.value)} className="w-full mt-2 p-2 border rounded" />
-                <div className="text-xs text-slate-400 mt-1">Below this amount the low-bank indicator will display (default: 10000)</div>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <input id="show-bank-warn" type="checkbox" checked={showBankWarn} onChange={(e) => setShowBankWarn(e.target.checked)} />
-                <label htmlFor="show-bank-warn" className="text-sm text-slate-700">Show low-bank warning</label>
-              </div>
+            <div className="flex items-center gap-2">
+              <input id="show-bank-warn" type="checkbox" checked={showBankWarn} onChange={(e) => setShowBankWarn(e.target.checked)} />
+              <label htmlFor="show-bank-warn" className="text-sm text-slate-700">Show low-bank warning</label>
             </div>
           </div>
+        </div>
 
-          <div>
-            <label className="block text-sm font-medium text-slate-700">Property Price Multiplier</label>
-            <input type="number" step="0.1" value={pm} onChange={(e) => setPm(e.target.value)} className="w-full mt-2 p-2 border rounded" />
-            <div className="text-xs text-slate-400 mt-1">Multiply base property prices (1 = no change)</div>
-          </div>
+        <div>
+          <label className="block text-sm font-medium text-slate-700">Property Price Multiplier</label>
+          <input type="number" step="0.1" value={pm} onChange={(e) => setPm(e.target.value)} className="w-full mt-2 p-2 border rounded" />
+          <div className="text-xs text-slate-400 mt-1">Multiply base property prices (1 = no change)</div>
+        </div>
 
-          <div>
-            <label className="block text-sm font-medium text-slate-700">Rent Multiplier</label>
-            <input type="number" step="0.1" value={rm} onChange={(e) => setRm(e.target.value)} className="w-full mt-2 p-2 border rounded" />
-            <div className="text-xs text-slate-400 mt-1">Multiply base rent values (1 = no change)</div>
-          </div>
-
+        <div>
+          <label className="block text-sm font-medium text-slate-700">Rent Multiplier</label>
+          <input type="number" step="0.1" value={rm} onChange={(e) => setRm(e.target.value)} className="w-full mt-2 p-2 border rounded" />
+          <div className="text-xs text-slate-400 mt-1">Multiply base rent values (1 = no change)</div>
         </div>
 
         <div className="p-4 border-t border-slate-100 flex items-center gap-2 sticky sm:static bottom-0 bg-white z-10">
@@ -178,6 +166,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
           {saveMessage && <div className={`text-sm font-medium ${saveMessage === 'Saved' ? 'text-green-600' : 'text-red-600'}`}>{saveMessage}</div>}
         </div>
       </div>
-    </div>
+    </BottomSheet>
   );
 };

@@ -19,7 +19,7 @@ Tests added
 - `settings-modal.test.tsx` checks the overlay uses mobile alignment and that the bank threshold grid stacks (`grid-cols-1`).
 
 Follow-ups / UX suggestions
-- Consider extracting a dedicated bottom-sheet component for the Settings modal to tighten animations / accessibility.
+- Implemented a dedicated `BottomSheet` component and migrated `SettingsModal` to use it for consistent bottom-sheet behavior and better accessibility (keyboard escape, close button).
 - Add e2e tests (Cypress/Playwright) to verify keyboard behavior on real mobile viewports and confirm inputs remain accessible.
 - Tune spacing and touch target sizes for very small devices (~320px). 
 - Consider hiding the large header spacing when the keyboard opens on mobile for a better fit.
