@@ -91,6 +91,8 @@ export interface GameState {
   jailBailAmount?: number;
   // New rent mode setting: 'standard' = per-property houses (Monopoly default), 'groupTotal' = rent determined by total houses across color group
   groupHouseRentMode?: 'standard' | 'groupTotal';
+  // Whether the board shows combined house totals for monopolies
+  showGroupHouseTotals?: boolean;
   // Bank settings
   bankTotal?: number;
   bankLowThreshold?: number;

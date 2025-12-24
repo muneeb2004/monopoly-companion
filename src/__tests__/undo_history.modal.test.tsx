@@ -10,7 +10,7 @@ describe('UndoHistoryModal', () => {
       undoEntries: [{ id: 1, playerId: 'p1', description: 'Test move', prevPosition: 0, newPosition: 3, prevIsJailed: false, newIsJailed: false, passGoAwarded: 0, createdAt: Date.now(), reverted: false }]
     });
 
-    const { container } = render(<UndoHistoryModal isOpen={true} onClose={() => {}} />);
+    render(<UndoHistoryModal isOpen={true} onClose={() => {}} />);
 
     expect(screen.getByText('Test move')).toBeTruthy();
     // Directly call revert to simulate local revert

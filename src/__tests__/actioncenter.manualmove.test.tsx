@@ -35,7 +35,7 @@ describe('ActionCenter manual move and chance', () => {
       currentPlayerIndex: 0
     });
 
-    const { container } = render(<ActionCenter />);
+    render(<ActionCenter />);
     const jailBtn = screen.getByText('Chance: Jail');
 
     await act(async () => {

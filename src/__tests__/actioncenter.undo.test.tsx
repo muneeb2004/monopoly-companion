@@ -47,7 +47,7 @@ describe('ActionCenter undo manual move', () => {
       properties: []
     });
 
-    const { container } = render(<ActionCenter />);
+    render(<ActionCenter />);
     const jailBtn = screen.getByText('Chance: Jail');
 
     await act(async () => {
