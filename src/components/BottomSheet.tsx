@@ -54,7 +54,7 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({ isOpen, onClose, title
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-4" role="presentation" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+    <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-4" role="presentation" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
       <div ref={sheetRef} className={`bg-white rounded-t-2xl sm:rounded-2xl w-full max-w-md shadow-2xl flex flex-col overflow-hidden max-h-[90vh] animate-in slide-in-from-bottom-5 ${className ?? ''}`} role="dialog" aria-modal="true" aria-label={typeof title === 'string' ? title : 'Dialog'} data-testid="bottomsheet">
         <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-white sticky top-0 z-10">
           <div className="flex items-center gap-2 text-slate-700 font-bold">{title}</div>

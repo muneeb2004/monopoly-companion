@@ -16,11 +16,7 @@
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
-  background-color: #f0fdf4;
-  color: #1f2937;
-}
-
-body {
+  background-color: #ffffff;
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
