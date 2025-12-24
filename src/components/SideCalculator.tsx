@@ -23,7 +23,19 @@ export const SideCalculator: React.FC = () => {
   useEffect(() => {
     if (!isOpen) return;
 
+    const isTypingInInput = () => {
+      const active = document.activeElement as HTMLElement | null;
+      if (!active) return false;
+      const tag = active.tagName.toLowerCase();
+      if (tag === 'input' || tag === 'textarea' || tag === 'select') return true;
+      if ((active as HTMLElement).isContentEditable) return true;
+      return false;
+    };
+
     const handleKeyDown = (e: KeyboardEvent) => {
+      // If the user is typing into an input/textarea/select/contenteditable (e.g., settings modal or dice input), ignore calculator keys
+      if (isTypingInInput()) return;
+
       // Numbers
       if (/^[0-9]$/.test(e.key)) {
         e.preventDefault();
