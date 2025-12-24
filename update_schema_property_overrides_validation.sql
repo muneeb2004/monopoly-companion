@@ -27,18 +27,32 @@ BEGIN
     ADD CONSTRAINT game_properties_price_override_nonnegative CHECK (price_override IS NULL OR price_override >= 0);
   END IF;
 
-  -- Add rent_override check if missing
+  -- Add helper function and rent_override check if missing (functions allowed in CHECK)
+  IF NOT EXISTS (SELECT 1 FROM pg_proc WHERE proname = 'rent_override_nonneg') THEN
+    CREATE OR REPLACE FUNCTION public.rent_override_nonneg(rent jsonb) RETURNS boolean
+    LANGUAGE plpgsql IMMUTABLE STRICT AS $$
+    DECLARE
+      rec jsonb;
+    BEGIN
+      IF rent IS NULL THEN
+        RETURN TRUE;
+      END IF;
+      IF jsonb_typeof(rent) <> 'array' THEN
+        RETURN FALSE;
+      END IF;
+      FOR rec IN SELECT * FROM jsonb_array_elements(rent) LOOP
+        IF jsonb_typeof(rec) <> 'number' OR (rec)::numeric < 0 THEN
+          RETURN FALSE;
+        END IF;
+      END LOOP;
+      RETURN TRUE;
+    END;
+    $$;
+  END IF;
+
   IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'game_properties_rent_override_nonnegative') THEN
     ALTER TABLE public.game_properties
-    ADD CONSTRAINT game_properties_rent_override_nonnegative CHECK (
-      rent_override IS NULL OR (
-        jsonb_typeof(rent_override) = 'array' AND
-        NOT EXISTS (
-          SELECT 1 FROM jsonb_array_elements(rent_override) AS x
-          WHERE jsonb_typeof(x) <> 'number' OR (x)::numeric < 0
-        )
-      )
-    );
+    ADD CONSTRAINT game_properties_rent_override_nonnegative CHECK (public.rent_override_nonneg(rent_override));
   END IF;
 END
 $$;
