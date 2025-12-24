@@ -84,7 +84,9 @@ export const SideCalculator: React.FC = () => {
 
   return (
     <div className={cn(
-      "fixed right-0 top-1/2 -translate-y-1/2 z-30 transition-all duration-300 hidden lg:flex",
+      "fixed right-0 z-60 transition-all duration-300 flex",
+      // Small screens: sit above bottom action card; Large screens: center vertically
+      "bottom-20 lg:top-1/2 lg:-translate-y-1/2 lg:bottom-auto",
       isOpen ? "translate-x-0" : "translate-x-[calc(100%-24px)]"
     )}>
       {/* Toggle Tab */}
