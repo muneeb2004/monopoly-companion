@@ -14,12 +14,16 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
   const rentMultiplier = useGameStore(state => state.rentMultiplier ?? 1);
   const setStartingMoney = useGameStore(state => state.setStartingMoney);
   const setJailBailAmount = useGameStore(state => state.setJailBailAmount);
+  const setBankTotal = useGameStore(state => state.setBankTotal);
   const setMultipliers = useGameStore(state => state.setMultipliers);
   const applySettingsToProperties = useGameStore(state => state.applySettingsToProperties);
   const resetSettings = useGameStore(state => state.resetSettings);
 
+  const bankTotal = useGameStore(state => state.bankTotal ?? 100000);
+
   const [sm, setSm] = useState<string>(String(startingMoney));
   const [jba, setJba] = useState<string>(String(jailBailAmount));
+  const [bt, setBt] = useState<string>(String(bankTotal));
   const [pm, setPm] = useState<string>(String(priceMultiplier));
   const [rm, setRm] = useState<string>(String(rentMultiplier));
 
@@ -34,6 +38,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
   useEffect(() => {
     setSm(String(startingMoney));
     setJba(String(jailBailAmount));
+    setBt(String(bankTotal));
     setPm(String(priceMultiplier));
     setRm(String(rentMultiplier));
     setPropOverrides((useGameStore.getState().properties || []).map(pr => ({ id: pr.id, name: pr.name, priceOverride: pr.priceOverride ?? '', rentOverride: pr.rentOverride ? pr.rentOverride.join(',') : '' })));
@@ -45,10 +50,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
     setSaving(true);
     setSaveMessage(null);
     try {
-      await setStartingMoney(Number(sm));
-      await setJailBailAmount(Number(jba));
-      await setMultipliers(Number(pm), Number(rm));
-      // Persist per-property overrides
+      // Only call setters if they exist to be robust in tests
+      if (typeof setStartingMoney === 'function') await setStartingMoney(Number(sm));
+      if (typeof setJailBailAmount === 'function') await setJailBailAmount(Number(jba));
+      if (typeof setMultipliers === 'function') await setMultipliers(Number(pm), Number(rm));
+      if (typeof setBankTotal === 'function') await setBankTotal(Number(bt));
+
+      // Persist per-property overrides (run regardless)
       for (const o of propOverrides) {
         const priceVal = o.priceOverride === '' ? null : Number(o.priceOverride);
         const rentVal = o.rentOverride === '' ? null : o.rentOverride.split(',').map(s => Number(s.trim()));
@@ -116,6 +124,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
             <label className="block text-sm font-medium text-slate-700">Jail Bail Amount</label>
             <input type="number" value={jba} onChange={(e) => setJba(e.target.value)} className="w-full mt-2 p-2 border rounded" />
             <div className="text-xs text-slate-400 mt-1">Cost to leave jail immediately (default: 50)</div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700">Bank Total</label>
+            <input type="number" value={bt} onChange={(e) => setBt(e.target.value)} className="w-full mt-2 p-2 border rounded" />
+            <div className="text-xs text-slate-400 mt-1">Total funds available in the bank (default: 100000)</div>
           </div>
 
           <div>

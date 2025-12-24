@@ -8,8 +8,9 @@ interface LoanModalProps {
 }
 
 export const LoanModal: React.FC<LoanModalProps> = ({ isOpen, onClose }) => {
-  const { players, currentPlayerIndex, takeLoan, repayLoan } = useGameStore();
+  const { players, currentPlayerIndex, takeLoan, repayLoan, bankTotal } = useGameStore();
   const currentPlayer = players[currentPlayerIndex];
+  const bank = bankTotal ?? 100000;
   
   const [amount, setAmount] = useState('');
   const [mode, setMode] = useState<'BORROW' | 'REPAY'>('BORROW');
@@ -22,6 +23,10 @@ export const LoanModal: React.FC<LoanModalProps> = ({ isOpen, onClose }) => {
     if (!val || val <= 0) return;
 
     if (mode === 'BORROW') {
+      if (val > bank) {
+        alert('Bank has insufficient funds for this loan');
+        return;
+      }
       takeLoan(currentPlayer.id, val);
     } else {
       if (val > currentPlayer.loans) {
@@ -49,8 +54,16 @@ export const LoanModal: React.FC<LoanModalProps> = ({ isOpen, onClose }) => {
         </div>
 
         <div className="bg-slate-50 p-3 rounded-xl mb-6 border border-slate-100">
-          <div className="text-xs text-slate-500 uppercase font-bold tracking-wider mb-1">Current Debt</div>
-          <div className="text-2xl font-black text-red-600">${currentPlayer.loans}</div>
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="text-xs text-slate-500 uppercase font-bold tracking-wider mb-1">Current Debt</div>
+              <div className="text-2xl font-black text-red-600">${currentPlayer.loans}</div>
+            </div>
+            <div className="text-right">
+              <div className="text-xs text-slate-500 uppercase font-bold tracking-wider mb-1">Bank Total</div>
+              <div className="text-2xl font-black text-slate-800">${bank}</div>
+            </div>
+          </div>
         </div>
 
         <div className="flex p-1 bg-slate-100 rounded-lg mb-6">

@@ -40,6 +40,7 @@ interface GameStore extends GameState {
   // Settings
   setStartingMoney: (amount: number) => Promise<void>;
   setJailBailAmount: (amount: number) => Promise<void>;
+  setBankTotal: (amount: number) => Promise<void>;
   setMultipliers: (priceMultiplier: number, rentMultiplier: number) => Promise<void>;
   setPropertyOverride: (propertyId: number, priceOverride?: number | null, rentOverride?: number[] | null) => Promise<void>;
   applySettingsToProperties: () => void;
@@ -61,6 +62,7 @@ const INITIAL_STATE = {
   diceMode: 'DIGITAL' as 'DIGITAL',
   startingMoney: 1500,
   jailBailAmount: 50,
+  bankTotal: 100000,
   priceMultiplier: 1,
   rentMultiplier: 1
 };
@@ -80,6 +82,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
           dice_mode: 'DIGITAL', 
           starting_money: get().startingMoney, 
           jail_bail_amount: get().jailBailAmount,
+          bank_total: get().bankTotal,
           price_multiplier: get().priceMultiplier, 
           rent_multiplier: get().rentMultiplier 
         })
@@ -186,17 +189,15 @@ export const useGameStore = create<GameStore>((set, get) => ({
         trades,
         startingMoney: gameRes.data.starting_money ?? get().startingMoney,
         jailBailAmount: gameRes.data.jail_bail_amount ?? get().jailBailAmount,
-        priceMultiplier: gameRes.data.price_multiplier ?? get().priceMultiplier,
-        rentMultiplier: gameRes.data.rent_multiplier ?? get().rentMultiplier,
+        bankTotal: gameRes.data.bank_total ?? get().bankTotal,
         isLoading: false
       });
-      
+
       // Apply settings to calculate correct prices/rents based on loaded multipliers/overrides
       get().applySettingsToProperties();
 
       localStorage.setItem('monopoly_game_id', gameId);
 
-      // Setup Realtime Subscription
       supabase.channel(`game:${gameId}`)
         .on('postgres_changes', { event: '*', schema: 'public', table: 'games', filter: `id=eq.${gameId}` }, (payload: any) => {
           if (payload.new) {
@@ -205,7 +206,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
               diceMode: payload.new.dice_mode,
               turnCount: payload.new.turn_count,
               currentPlayerIndex: payload.new.current_player_index,
-              jailBailAmount: payload.new.jail_bail_amount ?? get().jailBailAmount
+              jailBailAmount: payload.new.jail_bail_amount ?? get().jailBailAmount,
+              bankTotal: payload.new.bank_total ?? get().bankTotal
             });
           }
         })
@@ -367,12 +369,12 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set({ startingMoney: amount });
   },
 
-  setJailBailAmount: async (amount) => {
+  setBankTotal: async (amount) => {
     const { gameId } = get();
     if (gameId && supabase) {
-      await supabase.from('games').update({ jail_bail_amount: amount }).eq('id', gameId);
+      await supabase.from('games').update({ bank_total: amount }).eq('id', gameId);
     }
-    set({ jailBailAmount: amount });
+    set({ bankTotal: amount });
   },
 
   setMultipliers: async (priceMultiplier, rentMultiplier) => {
@@ -441,10 +443,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
   resetSettings: async () => {
     const { gameId } = get();
     if (gameId && supabase) {
-      await supabase.from('games').update({ starting_money: 1500, jail_bail_amount: 50, price_multiplier: 1, rent_multiplier: 1 }).eq('id', gameId);
+      await supabase.from('games').update({ starting_money: 1500, jail_bail_amount: 50, price_multiplier: 1, rent_multiplier: 1, bank_total: 100000 }).eq('id', gameId);
       await supabase.from('game_properties').update({ price_override: null, rent_override: null }).eq('game_id', gameId);
     }
-    set({ startingMoney: 1500, jailBailAmount: 50, priceMultiplier: 1, rentMultiplier: 1, properties: INITIAL_PROPERTIES });
+    set({ startingMoney: 1500, jailBailAmount: 50, bankTotal: 100000, priceMultiplier: 1, rentMultiplier: 1, properties: INITIAL_PROPERTIES });
   },
 
   incrementJailTurns: async (playerId) => {
@@ -568,30 +570,45 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
   takeLoan: async (playerId, amount) => {
     const { gameId, players } = get();
-    if (!supabase || !gameId) return;
-    
+    if (!gameId) return;
+
     const player = players.find(p => p.id === playerId);
     if (!player) return;
 
-    await supabase.from('transactions').insert({
-      game_id: gameId,
-      type: 'OTHER',
-      amount,
-      from_id: 'BANK',
-      to_id: playerId,
-      description: `Took a $${amount} loan`,
-      timestamp: Date.now()
-    });
+    const bank = get().bankTotal ?? 0;
+    // Prevent loans if bank doesn't have enough funds
+    if (bank < amount) return;
 
-    await supabase.from('players').update({
-      balance: player.balance + amount,
-      loans: player.loans + amount
-    }).eq('id', playerId);
+    if (supabase) {
+      await supabase.from('transactions').insert({
+        game_id: gameId,
+        type: 'OTHER',
+        amount,
+        from_id: 'BANK',
+        to_id: playerId,
+        description: `Took a $${amount} loan`,
+        timestamp: Date.now()
+      });
+
+      await supabase.from('players').update({
+        balance: player.balance + amount,
+        loans: player.loans + amount
+      }).eq('id', playerId);
+
+      // Deduct from bank total
+      await supabase.from('games').update({ bank_total: bank - amount }).eq('id', gameId);
+
+      // Optimistically update local state
+      set({ players: players.map(p => p.id === playerId ? { ...p, balance: p.balance + amount, loans: p.loans + amount } : p), bankTotal: bank - amount });
+    } else {
+      // Local-only fallback
+      set({ players: players.map(p => p.id === playerId ? { ...p, balance: p.balance + amount, loans: p.loans + amount } : p), bankTotal: bank - amount });
+    }
   },
 
   repayLoan: async (playerId, amount) => {
     const { gameId, players } = get();
-    if (!supabase || !gameId) return;
+    if (!gameId) return;
 
     const player = players.find(p => p.id === playerId);
     if (!player) return;
@@ -599,20 +616,32 @@ export const useGameStore = create<GameStore>((set, get) => ({
     // No interest - just repay principal
     const totalToPay = amount;
 
-    await supabase.from('transactions').insert({
-      game_id: gameId,
-      type: 'OTHER',
-      amount: totalToPay,
-      from_id: playerId,
-      to_id: 'BANK',
-      description: `Repaid $${amount} loan`,
-      timestamp: Date.now()
-    });
+    if (supabase) {
+      await supabase.from('transactions').insert({
+        game_id: gameId,
+        type: 'OTHER',
+        amount: totalToPay,
+        from_id: playerId,
+        to_id: 'BANK',
+        description: `Repaid $${amount} loan`,
+        timestamp: Date.now()
+      });
 
-    await supabase.from('players').update({
-      balance: player.balance - totalToPay,
-      loans: Math.max(0, player.loans - amount)
-    }).eq('id', playerId);
+      await supabase.from('players').update({
+        balance: player.balance - totalToPay,
+        loans: Math.max(0, player.loans - amount)
+      }).eq('id', playerId);
+
+      // Increase bank total
+      const bank = get().bankTotal ?? 0;
+      await supabase.from('games').update({ bank_total: bank + amount }).eq('id', gameId);
+
+      // Optimistic local update
+      set({ players: players.map(p => p.id === playerId ? { ...p, balance: p.balance - totalToPay, loans: Math.max(0, p.loans - amount) } : p), bankTotal: (get().bankTotal ?? 0) + amount });
+    } else {
+      // Local-only fallback
+      set({ players: players.map(p => p.id === playerId ? { ...p, balance: p.balance - totalToPay, loans: Math.max(0, p.loans - amount) } : p), bankTotal: (get().bankTotal ?? 0) + amount });
+    }
   },
 
   resetGame: async () => {
