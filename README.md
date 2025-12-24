@@ -100,3 +100,49 @@ npm run dev
 
 4.  **End Game**:
     - The game state persists in Supabase, allowing sessions to be paused and resumed anytime.
+
+---
+
+## 🧭 Additional Features & Notes
+
+### 🧩 UI & Accessibility Enhancements
+- **BottomSheet Component**: Settings and other modals use a mobile-optimized bottom-sheet with a slide-in animation, body-scroll lock, overlay click to close, and Escape to dismiss. It includes a focus trap to keep keyboard users inside the dialog.
+- **Mobile Numpad & Formatting Hints**: Numeric inputs include `inputMode` and `pattern` attributes to trigger the mobile numeric keyboard. Inputs also display a `Formatted:` hint (e.g., "1,500") while typing using `formatNumberInput`.
+- **Validation**: Price and rent overrides accept validation on the UI (price must be a non-negative integer; rent must be comma-separated non-negative numbers) and show inline errors.
+
+### 🧾 Property Overrides (Setup)
+- The **Properties** tab in the setup lobby lets hosts set per-property **price** and **rent** overrides before starting the game.
+- When the host clicks **Start Game** a confirmation is shown: "Property overrides will be applied when starting the game." Confirming will persist overrides into the `game_properties` rows in the DB so they are applied for that game session.
+
+### 🗄️ Database & Migrations
+- The schema supports per-game overrides via `game_properties.price_override` (integer) and `game_properties.rent_override` (jsonb array).
+- Migrations included in this repo:
+  - `update_schema_property_overrides.sql` — adds `price_override` and `rent_override` to `game_properties` when missing.
+  - `update_schema_property_overrides_validation.sql` — sanitizes existing values and adds DB-level CHECK constraints to ensure `price_override >= 0` and that `rent_override` is an array of non-negative numbers (uses an immutable helper function for validation).
+
+Run migrations in Supabase Console → SQL Editor or via `psql`:
+
+```bash
+# Example using psql (replace connection string)
+psql "postgresql://<user>:<pass>@<host>:5432/<db>" -f update_schema_property_overrides.sql
+psql "postgresql://<user>:<pass>@<host>:5432/<db>" -f update_schema_property_overrides_validation.sql
+```
+
+> Note: migrations are idempotent and can be re-run safely.
+
+### ✅ Testing & CI
+- **Unit Tests**: Vitest + @testing-library/react for component/unit tests. `vitest.config.ts` excludes the `e2e/` folder to avoid Playwright files being executed by Vitest.
+- **E2E Tests**: Playwright with a `mobile-iphone` project (iPhone emulation) is included. Tests validate mobile keyboard behavior, focus/escape interactions, and full flows (e.g., set overrides → start game → verify behavior).
+- NPM scripts added:
+  - `npm test` — run unit tests (Vitest)
+  - `npm run test:e2e` — run Playwright E2E tests
+
+Suggested GitHub Actions workflow:
+1. Install dependencies (npm ci) and run `npm test`.
+2. Build (`npm run build`).
+3. Optionally run `npx playwright install --with-deps` and `npx playwright test` for E2E on a separate job (or as an approval-protected job for production deploys).
+4. Apply DB migrations or run them from a protected deployment job before the first production migration.
+
+---
+
+If you'd like, I can add a GitHub Actions workflow file to this repo that runs tests, builds the app, and optionally runs Playwright E2E tests and migrations before deploy. Let me know which CI provider and policies you prefer (e.g., run E2E only on `main` or on every PR).
