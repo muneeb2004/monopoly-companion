@@ -14,6 +14,13 @@ const SetupScreenComponent: React.FC = () => {
   const [selectedTokenId, setSelectedTokenId] = useState(GAME_TOKENS[0].id);
   const [diceMode, setDiceMode] = useState<'DIGITAL' | 'PHYSICAL'>('DIGITAL');
   const [showSettings, setShowSettings] = useState(false);
+
+  // Open settings when dev global event is emitted
+  React.useEffect(() => {
+    const handler = () => setShowSettings(true);
+    window.addEventListener('openDebugSettings', handler);
+    return () => window.removeEventListener('openDebugSettings', handler);
+  }, []);
   const [activeTab, setActiveTab] = useState<'players' | 'properties'>('players');
   const [showStartConfirm, setShowStartConfirm] = useState(false);
 
