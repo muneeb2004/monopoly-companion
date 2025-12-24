@@ -50,84 +50,101 @@ function App() {
     }
   };
 
+  const toastMessage = useGameStore(state => state.toastMessage);
+
   if (isLoading || isRestoring) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <Loader2 className="w-10 h-10 text-blue-600 animate-spin" />
-      </div>
+      <>
+        <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+          <Loader2 className="w-10 h-10 text-blue-600 animate-spin" />
+        </div>
+        {toastMessage && (
+          <div className="fixed left-1/2 -translate-x-1/2 bottom-6 bg-slate-900 text-white px-4 py-2 rounded shadow-lg">
+            {toastMessage}
+          </div>
+        )}
+      </>
     );
   }
 
   // Landing Screen
   if (!gameStatus) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md border border-slate-200">
-          <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4">
-              <Users className="w-8 h-8 text-blue-600" />
-            </div>
-            <h1 className="text-3xl font-bold text-slate-800">Monopoly Tracker</h1>
-            <p className="text-slate-500 mt-2">Create a new session or join existing</p>
-          </div>
-
-          {error && (
-            <div className="mb-6 p-3 bg-red-50 text-red-600 text-sm rounded-lg border border-red-100">
-              {error}
-            </div>
-          )}
-
-          <div className="space-y-6">
-            <button
-              onClick={() => createNewGame()}
-              className="w-full bg-slate-900 text-white py-4 rounded-xl font-bold text-lg hover:bg-slate-800 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transition-all"
-            >
-              <Plus size={24} />
-              Create New Game
-            </button>
-
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t border-slate-200" />
+      <>
+        <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md border border-slate-200">
+            <div className="text-center mb-8">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4">
+                <Users className="w-8 h-8 text-blue-600" />
               </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-white px-2 text-slate-500">Or join existing</span>
-              </div>
+              <h1 className="text-3xl font-bold text-slate-800">Monopoly Tracker</h1>
+              <p className="text-slate-500 mt-2">Create a new session or join existing</p>
             </div>
 
-            <form onSubmit={handleJoin} className="space-y-2">
+            {error && (
+              <div className="mb-6 p-3 bg-red-50 text-red-600 text-sm rounded-lg border border-red-100">
+                {error}
+              </div>
+            )}
+
+            <div className="space-y-6">
+              <button
+                onClick={() => createNewGame()}
+                className="w-full bg-slate-900 text-white py-4 rounded-xl font-bold text-lg hover:bg-slate-800 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transition-all"
+              >
+                <Plus size={24} />
+                Create New Game
+              </button>
+
               <div className="relative">
-                <input
-                  type="text"
-                  value={joinId}
-                  onChange={(e) => setJoinId(e.target.value)}
-                  placeholder="Enter Game ID..."
-                  className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all pr-24"
-                />
-                <div className="absolute right-2 top-2 bottom-2 flex gap-1">
-                  <button 
-                    type="button"
-                    onClick={handleSpectate}
-                    disabled={!joinId.trim()}
-                    className="bg-slate-100 text-slate-600 px-3 rounded-lg hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-1"
-                    title="Watch Game"
-                  >
-                    <Eye size={20} />
-                  </button>
-                  <button 
-                    type="submit"
-                    disabled={!joinId.trim()}
-                    className="bg-blue-100 text-blue-600 px-3 rounded-lg hover:bg-blue-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                    title="Join Game"
-                  >
-                    <ArrowRight size={20} />
-                  </button>
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t border-slate-200" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-white px-2 text-slate-500">Or join existing</span>
                 </div>
               </div>
-            </form>
+
+              <form onSubmit={handleJoin} className="space-y-2">
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={joinId}
+                    onChange={(e) => setJoinId(e.target.value)}
+                    placeholder="Enter Game ID..."
+                    className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all pr-24"
+                  />
+                  <div className="absolute right-2 top-2 bottom-2 flex gap-1">
+                    <button 
+                      type="button"
+                      onClick={handleSpectate}
+                      disabled={!joinId.trim()}
+                      className="bg-slate-100 text-slate-600 px-3 rounded-lg hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-1"
+                      title="Watch Game"
+                    >
+                      <Eye size={20} />
+                    </button>
+                    <button 
+                      type="submit"
+                      disabled={!joinId.trim()}
+                      className="bg-blue-100 text-blue-600 px-3 rounded-lg hover:bg-blue-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      title="Join Game"
+                    >
+                      <ArrowRight size={20} />
+                    </button>
+                  </div>
+                </div>
+              </form>
+            </div>
           </div>
         </div>
-      </div>
+
+        {toastMessage && (
+          <div className="fixed left-1/2 -translate-x-1/2 bottom-6 bg-slate-900 text-white px-4 py-2 rounded shadow-lg">
+            {toastMessage}
+          </div>
+        )}
+      </>
     );
   }
 
@@ -156,6 +173,11 @@ function App() {
   return (
     <div className="antialiased text-slate-900">
       <Dashboard />
+      {toastMessage && (
+        <div className="fixed left-1/2 -translate-x-1/2 bottom-6 bg-slate-900 text-white px-4 py-2 rounded shadow-lg">
+          {toastMessage}
+        </div>
+      )}
     </div>
   );
 }

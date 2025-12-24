@@ -27,5 +27,6 @@ describe('endAndRestart', () => {
     expect(state.players[0].position).toBe(0);
     expect(state.players[0].isJailed).toBe(false);
     expect(state.players[0].loans).toBe(0);
+    expect(state.toastMessage).toBe('Game ended — edit players to start again');
   });
 });

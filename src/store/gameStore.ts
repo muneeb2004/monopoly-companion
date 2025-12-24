@@ -8,6 +8,9 @@ interface GameStore extends GameState {
   gameStatus: 'SETUP' | 'ACTIVE' | 'COMPLETED' | null;
   isLoading: boolean;
   error: string | null;
+  // Transient UI
+  toastMessage: string | null;
+  setToast: (message: string | null, duration?: number) => void;
   
   // Session Actions
   createNewGame: () => Promise<string | null>;
@@ -57,6 +60,8 @@ const INITIAL_STATE = {
   gameStatus: null,
   isLoading: false,
   error: null,
+  // Toast for transient messages
+  toastMessage: null,
   players: [],
   properties: INITIAL_PROPERTIES,
   currentPlayerIndex: 0,
@@ -75,6 +80,15 @@ const INITIAL_STATE = {
 
 export const useGameStore = create<GameStore>((set, get) => ({
   ...INITIAL_STATE,
+
+  // Toast setter
+  setToast: (message, duration = 3000) => {
+    set({ toastMessage: message });
+    if (message && duration > 0) {
+      const id = setTimeout(() => set({ toastMessage: null }), duration);
+      // No cleanup needed for this simple impl; subsequent toasts overwrite message
+    }
+  },
 
   createNewGame: async () => {
     if (!supabase) return null;
@@ -718,6 +732,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
       players: resetPlayers,
       gameStatus: 'SETUP'
     });
+
+    // Notify the user
+    set(get => ({ toastMessage: 'Game ended — edit players to start again' }));
   },
 
   createTrade: async (receiverId, offeredMoney, requestedMoney, offeredProperties, requestedProperties) => {
