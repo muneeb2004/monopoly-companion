@@ -105,8 +105,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
                 <div key={o.id} className="p-2 border-b last:border-b-0">
                   <div className="text-sm font-bold">{o.name}</div>
                   <div className="flex flex-col sm:flex-row gap-2 mt-2">
-                    <input placeholder="Price override" value={o.priceOverride} onChange={(e) => setPropOverrides(prev => prev.map(p => p.id === o.id ? { ...p, priceOverride: e.target.value } : p))} className="p-1 border rounded w-full sm:w-32" />
-                    <input placeholder="Rent override (comma-separated)" value={o.rentOverride} onChange={(e) => setPropOverrides(prev => prev.map(p => p.id === o.id ? { ...p, rentOverride: e.target.value } : p))} className="p-1 border rounded flex-1 w-full" />
+                      <input placeholder="Price override" inputMode="numeric" pattern="[0-9]*" value={o.priceOverride} onChange={(e) => setPropOverrides(prev => prev.map(p => p.id === o.id ? { ...p, priceOverride: e.target.value } : p))} className="p-1 border rounded w-full sm:w-32" />
+                      <input placeholder="Rent override (comma-separated)" inputMode="numeric" value={o.rentOverride} onChange={(e) => setPropOverrides(prev => prev.map(p => p.id === o.id ? { ...p, rentOverride: e.target.value } : p))} className="p-1 border rounded flex-1 w-full" />
                   </div>
                 </div>
               ))}
@@ -115,25 +115,24 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
         </div>
         <div>
           <label className="block text-sm font-medium text-slate-700">Starting Money</label>
-          <input type="number" value={sm} onChange={(e) => setSm(e.target.value)} className="w-full mt-2 p-2 border rounded" />
+            <input type="number" inputMode="numeric" pattern="[0-9]*" value={sm} onChange={(e) => setSm(e.target.value)} className="w-full mt-2 p-2 border rounded" />
           <div className="text-xs text-slate-400 mt-1">Default balance assigned to new players (default: 1500)</div>
         </div>
 
         <div>
           <label className="block text-sm font-medium text-slate-700">Jail Bail Amount</label>
-          <input type="number" value={jba} onChange={(e) => setJba(e.target.value)} className="w-full mt-2 p-2 border rounded" />
+            <input type="number" inputMode="numeric" pattern="[0-9]*" value={jba} onChange={(e) => setJba(e.target.value)} className="w-full mt-2 p-2 border rounded" />
           <div className="text-xs text-slate-400 mt-1">Cost to leave jail immediately (default: 50)</div>
         </div>
 
         <div>
           <label className="block text-sm font-medium text-slate-700">Bank Total</label>
-          <input type="number" value={bt} onChange={(e) => setBt(e.target.value)} className="w-full mt-2 p-2 border rounded" />
-          <div className="text-xs text-slate-400 mt-1">Total funds available in the bank (default: 100000)</div>
+            <input type="number" inputMode="numeric" pattern="[0-9]*" value={bt} onChange={(e) => setBt(e.target.value)} className="w-full mt-2 p-2 border rounded" />
 
           <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block text-sm font-medium text-slate-700">Low-bank threshold</label>
-              <input type="number" value={bth} onChange={(e) => setBth(e.target.value)} className="w-full mt-2 p-2 border rounded" />
+                <input type="number" inputMode="numeric" pattern="[0-9]*" value={bth} onChange={(e) => setBth(e.target.value)} className="w-full mt-2 p-2 border rounded" />
               <div className="text-xs text-slate-400 mt-1">Below this amount the low-bank indicator will display (default: 10000)</div>
             </div>
 
@@ -146,13 +145,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
 
         <div>
           <label className="block text-sm font-medium text-slate-700">Property Price Multiplier</label>
-          <input type="number" step="0.1" value={pm} onChange={(e) => setPm(e.target.value)} className="w-full mt-2 p-2 border rounded" />
+            <input type="number" step="0.1" inputMode="decimal" pattern="[0-9]*[.,]?[0-9]*" value={pm} onChange={(e) => setPm(e.target.value)} className="w-full mt-2 p-2 border rounded" />
           <div className="text-xs text-slate-400 mt-1">Multiply base property prices (1 = no change)</div>
         </div>
 
         <div>
           <label className="block text-sm font-medium text-slate-700">Rent Multiplier</label>
-          <input type="number" step="0.1" value={rm} onChange={(e) => setRm(e.target.value)} className="w-full mt-2 p-2 border rounded" />
+            <input type="number" step="0.1" inputMode="decimal" pattern="[0-9]*[.,]?[0-9]*" value={rm} onChange={(e) => setRm(e.target.value)} className="w-full mt-2 p-2 border rounded" />
           <div className="text-xs text-slate-400 mt-1">Multiply base rent values (1 = no change)</div>
         </div>
 

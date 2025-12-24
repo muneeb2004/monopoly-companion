@@ -60,6 +60,8 @@ export const TransferModal: React.FC<TransferModalProps> = ({ isOpen, onClose, t
             <label className="block text-sm font-medium text-slate-700 mb-1">Amount ($)</label>
             <input
               type="number"
+              inputMode="numeric"
+              pattern="[0-9]*"
               value={amount}
               onChange={e => setAmount(e.target.value)}
               className="w-full text-2xl font-bold p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-center"

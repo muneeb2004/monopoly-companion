@@ -88,6 +88,8 @@ export const LoanModal: React.FC<LoanModalProps> = ({ isOpen, onClose }) => {
             </label>
             <input
               type="number"
+              inputMode="numeric"
+              pattern="[0-9]*"
               value={amount}
               onChange={e => setAmount(e.target.value)}
               className="w-full text-2xl font-bold p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-amber-500 outline-none text-center"

@@ -104,6 +104,8 @@ const TradeModalComponent: React.FC<TradeModalProps> = ({ isOpen, onClose }) => 
                    </label>
                    <input
                      type="number"
+                     inputMode="numeric"
+                     pattern="[0-9]*"
                      value={offeredMoney || ''}
                      onChange={e => setOfferedMoney(Math.max(0, Number(e.target.value)))}
                      className="w-full text-xl font-bold p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-red-200 outline-none"
@@ -117,6 +119,8 @@ const TradeModalComponent: React.FC<TradeModalProps> = ({ isOpen, onClose }) => 
                    </label>
                    <input
                      type="number"
+                     inputMode="numeric"
+                     pattern="[0-9]*"
                      value={requestedMoney || ''}
                      onChange={e => setRequestedMoney(Math.max(0, Number(e.target.value)))}
                      className="w-full text-xl font-bold p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-green-200 outline-none"

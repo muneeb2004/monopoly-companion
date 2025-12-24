@@ -201,6 +201,8 @@ const DiceRollerComponent: React.FC<DiceRollerProps> = ({ onRollComplete }) => {
              <input
                ref={inputRef}
                type="number"
+               inputMode="numeric"
+               pattern="[0-9]*"
                min="1"
                max="12"
                value={manualValue}
