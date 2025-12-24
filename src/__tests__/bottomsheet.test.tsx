@@ -22,7 +22,7 @@ describe('BottomSheet component', () => {
     expect(onClose).toHaveBeenCalledTimes(1);
 
     // open again and press escape
-    const { rerender } = render(<BottomSheet isOpen={true} onClose={onClose} title="T" /> as any);
+    render(<BottomSheet isOpen={true} onClose={onClose} title="T" />);
     fireEvent.keyDown(document, { key: 'Escape' });
     expect(onClose).toHaveBeenCalled();
   });
@@ -39,7 +39,6 @@ describe('BottomSheet component', () => {
     const buttons = Array.from(container.querySelectorAll('button')) as HTMLElement[];
     expect(buttons.length).toBeGreaterThanOrEqual(2);
 
-    const first = buttons[0];
     const last = buttons[buttons.length - 1];
 
     // focus the last element and press Tab, focus should return to first

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useGameStore } from '../store/gameStore';
 import { X, Landmark } from 'lucide-react';
+import { formatNumberInput } from '../lib/utils';
 
 interface LoanModalProps {
   isOpen: boolean;
