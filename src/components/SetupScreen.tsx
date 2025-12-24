@@ -4,6 +4,7 @@ import { Plus, Play, Users, Dices, Keyboard, Settings2 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { GAME_TOKENS, getTokenById } from '../data/tokens';
 import { SettingsModal } from './SettingsModal';
+import PropertyOverridesTab from './PropertyOverridesTab';
 
 const SetupScreenComponent: React.FC = () => {
   const players = useGameStore(state => state.players);
@@ -13,6 +14,7 @@ const SetupScreenComponent: React.FC = () => {
   const [selectedTokenId, setSelectedTokenId] = useState(GAME_TOKENS[0].id);
   const [diceMode, setDiceMode] = useState<'DIGITAL' | 'PHYSICAL'>('DIGITAL');
   const [showSettings, setShowSettings] = useState(false);
+  const [activeTab, setActiveTab] = useState<'players' | 'properties'>('players');
 
   // Render counter for tests
   const renderRef = React.useRef(1);
@@ -52,65 +54,90 @@ const SetupScreenComponent: React.FC = () => {
           <p className="text-slate-500 mt-2">Add players to begin the game</p>
         </div>
 
-        <form onSubmit={handleAddPlayer} className="mb-6">
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Player Name</label>
-              <input
-                type="text"
-                value={newName}
-                onChange={(e) => setNewName(e.target.value)}
-                placeholder="Enter name (e.g. John)"
-                className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">Select Token</label>
-              <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-                {GAME_TOKENS.map((token) => {
-                  const isTaken = players.some(p => p.token === token.id);
-                  const isSelected = selectedTokenId === token.id;
-                  
-                  return (
-                    <button
-                      key={token.id}
-                      type="button"
-                      disabled={isTaken}
-                      onClick={() => setSelectedTokenId(token.id)}
-                      className={cn(
-                        "aspect-square rounded-xl border-2 flex flex-col items-center justify-center transition-all relative overflow-hidden",
-                        isSelected 
-                          ? "border-slate-800 bg-slate-50 shadow-md scale-105 z-10" 
-                          : "border-slate-100 bg-white hover:border-slate-300",
-                        isTaken && "opacity-40 cursor-not-allowed bg-slate-100 grayscale border-slate-100 hover:border-slate-100"
-                      )}
-                    >
-                      <div className="text-2xl mb-1">{token.emoji}</div>
-                      <div className="text-[9px] font-bold uppercase tracking-wider text-slate-500 truncate w-full px-1 text-center">
-                        {token.label}
-                      </div>
-                      {/* Color Strip */}
-                      <div 
-                        className="absolute bottom-0 left-0 right-0 h-1" 
-                        style={{ backgroundColor: token.color }}
-                      />
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
+        <div className="mb-6">
+          <div className="flex gap-2 border rounded-lg overflow-hidden mb-4">
             <button
-              type="submit"
-              disabled={!newName.trim() || players.length >= 8}
-              className="w-full bg-slate-900 text-white py-2 rounded-lg font-medium hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-            >
-              <Plus size={20} />
-              Add Player
-            </button>
+              type="button"
+              onClick={() => setActiveTab('players')}
+              className={cn(
+                "flex-1 px-4 py-2 text-sm font-medium",
+                activeTab === 'players' ? 'bg-slate-900 text-white' : 'bg-white text-slate-700'
+              )}
+            >Players</button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('properties')}
+              className={cn(
+                "flex-1 px-4 py-2 text-sm font-medium",
+                activeTab === 'properties' ? 'bg-slate-900 text-white' : 'bg-white text-slate-700'
+              )}
+            >Properties</button>
           </div>
-        </form>
+
+          {activeTab === 'players' ? (
+            <form onSubmit={handleAddPlayer} className="mb-6">
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Player Name</label>
+                  <input
+                    type="text"
+                    value={newName}
+                    onChange={(e) => setNewName(e.target.value)}
+                    placeholder="Enter name (e.g. John)"
+                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">Select Token</label>
+                  <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                    {GAME_TOKENS.map((token) => {
+                      const isTaken = players.some(p => p.token === token.id);
+                      const isSelected = selectedTokenId === token.id;
+
+                      return (
+                        <button
+                          key={token.id}
+                          type="button"
+                          disabled={isTaken}
+                          onClick={() => setSelectedTokenId(token.id)}
+                          className={cn(
+                            "aspect-square rounded-xl border-2 flex flex-col items-center justify-center transition-all relative overflow-hidden",
+                            isSelected 
+                              ? "border-slate-800 bg-slate-50 shadow-md scale-105 z-10" 
+                              : "border-slate-100 bg-white hover:border-slate-300",
+                            isTaken && "opacity-40 cursor-not-allowed bg-slate-100 grayscale border-slate-100 hover:border-slate-100"
+                          )}
+                        >
+                          <div className="text-2xl mb-1">{token.emoji}</div>
+                          <div className="text-[9px] font-bold uppercase tracking-wider text-slate-500 truncate w-full px-1 text-center">
+                            {token.label}
+                          </div>
+                          {/* Color Strip */}
+                          <div 
+                            className="absolute bottom-0 left-0 right-0 h-1" 
+                            style={{ backgroundColor: token.color }}
+                          />
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={!newName.trim() || players.length >= 8}
+                  className="w-full bg-slate-900 text-white py-2 rounded-lg font-medium hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  <Plus size={20} />
+                  Add Player
+                </button>
+              </div>
+            </form>
+          ) : (
+            <PropertyOverridesTab />
+          )}
+        </div>
 
         <div className="space-y-3 mb-8">
           {players.map((player) => {
