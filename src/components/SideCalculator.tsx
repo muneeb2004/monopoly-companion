@@ -147,7 +147,7 @@ export const SideCalculator: React.FC = () => {
           <div className="text-xs text-slate-400 font-medium mb-1 truncate">
              {selectedPlayer ? `${selectedPlayer.name}` : 'Select Player'}
           </div>
-          <div className="text-3xl font-mono tracking-tight font-bold">
+          <div data-testid="side-calculator-display" className="text-3xl font-mono tracking-tight font-bold">
             {parseInt(value).toLocaleString()}
           </div>
         </div>
