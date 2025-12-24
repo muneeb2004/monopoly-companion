@@ -102,18 +102,27 @@ const PropertyManagerComponent: React.FC<PropertyManagerProps> = ({ isOpen, onCl
         </div>
 
         <div className="p-2 flex gap-2 overflow-x-auto border-b border-slate-100">
-          {['all', 'owned', 'unowned'].map(f => (
-            <button
-              key={f}
-              onClick={() => setFilter(f)}
-              className={cn(
-                "px-3 py-1 rounded-full text-sm font-medium whitespace-nowrap transition-colors",
-                filter === f ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-              )}
-            >
-              {f.charAt(0).toUpperCase() + f.slice(1)}
-            </button>
-          ))}
+          {(() => {
+             const totalOwned = properties.filter(p => !!p.ownerId).length;
+             const totalUnowned = properties.filter(p => !p.ownerId && p.group !== 'special').length;
+             const totalAll = properties.filter(p => p.group !== 'special').length;
+             return [
+               { key: 'all', label: `All (${totalAll})` },
+               { key: 'owned', label: `Owned (${totalOwned})` },
+               { key: 'unowned', label: `Unowned (${totalUnowned})` }
+             ].map(f => (
+               <button
+                 key={f.key}
+                 onClick={() => setFilter(f.key)}
+                 className={cn(
+                   "px-3 py-1 rounded-full text-sm font-medium whitespace-nowrap transition-colors",
+                   filter === f.key ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                 )}
+               >
+                 {f.label}
+               </button>
+             ));
+          })()}
         </div>
 
         <div className="flex-1 overflow-y-auto p-4 space-y-6">

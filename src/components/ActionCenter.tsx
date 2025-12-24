@@ -24,6 +24,10 @@ const ActionCenterComponent: React.FC = () => {
   const [tradeModalOpen, setTradeModalOpen] = useState(false);
   const [calcModalOpen, setCalcModalOpen] = useState(false);
 
+  // End & Restart confirmation
+  const [showEndConfirm, setShowEndConfirm] = useState(false);
+  const endAndRestart = useGameStore(state => state.endAndRestart);
+
   const bank = useGameStore(state => state.bankTotal ?? 100000);
   const showBankLowWarning = useGameStore(state => state.showBankLowWarning ?? true);
   const bankLowThreshold = useGameStore(state => state.bankLowThreshold ?? 10000);
@@ -159,6 +163,15 @@ const ActionCenterComponent: React.FC = () => {
           </button>
 
           <button 
+            onClick={() => setShowEndConfirm(true)}
+            className="min-w-[70px] sm:min-w-0 flex flex-col items-center justify-center p-3 bg-red-600 text-white rounded-xl shadow-lg hover:bg-red-700 active:scale-95 transition-all"
+            title="End Game & Restart"
+          >
+            <ArrowRight className="w-5 h-5 mb-1" />
+            <span className="text-[10px] font-bold">End Game</span>
+          </button>
+
+          <button 
             onClick={nextTurn}
             className="min-w-[70px] sm:min-w-0 flex flex-col items-center justify-center p-3 bg-slate-900 text-white rounded-xl shadow-lg hover:bg-slate-800 active:scale-95 transition-all"
           >
@@ -188,6 +201,20 @@ const ActionCenterComponent: React.FC = () => {
         isOpen={calcModalOpen}
         onClose={() => setCalcModalOpen(false)}
       />
+
+      {/* End & Restart confirmation */}
+      {showEndConfirm && (
+        <div role="dialog" aria-modal="true" className="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg p-6 w-full max-w-sm">
+            <h3 className="text-lg font-bold mb-2 text-red-700">End Game & Restart</h3>
+            <p className="text-sm text-slate-600 mb-4">This will end the current game and return you to the setup screen where players will be preserved and ready for editing. Continue?</p>
+            <div className="flex gap-2">
+              <button onClick={() => setShowEndConfirm(false)} className="flex-1 px-4 py-2 rounded bg-slate-100">Cancel</button>
+              <button onClick={async () => { if (typeof endAndRestart === 'function') await endAndRestart(); setShowEndConfirm(false); }} className="flex-1 px-4 py-2 rounded bg-red-600 text-white">End & Restart</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
