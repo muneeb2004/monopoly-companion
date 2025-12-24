@@ -49,11 +49,19 @@ interface GameStore extends GameState {
   setShowBankLowWarning: (enabled: boolean) => void;
   setBankLowThreshold: (amount: number) => Promise<void>;
   setMultipliers: (priceMultiplier: number, rentMultiplier: number) => Promise<void>;
+  setGroupHouseRentMode: (mode: 'standard' | 'groupTotal') => Promise<void>;
+  setShowGroupHouseTotals: (enabled: boolean) => Promise<void>;
   setPropertyOverride: (propertyId: number, priceOverride?: number | null, rentOverride?: number[] | null) => Promise<void>;
+  // Persist base property defaults (price/rent) into DB
+  setBaseProperty: (propertyId: number, price?: number | null, rent?: number[] | null) => Promise<void>;
   applySettingsToProperties: () => void;
   resetSettings: () => Promise<void>;
+  recordUndo: (playerId: string, description: string) => Promise<void>;
+  addUndoEntry: (entry: import('../types').UndoEntry) => Promise<void>;
+  fetchUndoEntries: () => Promise<void>;
+  revertUndoEntry: (entryId: number, actorId?: string | null) => Promise<boolean>;
   incrementJailTurns: (playerId: string) => Promise<void>;
-}
+} 
 
 const INITIAL_STATE = {
   gameId: null,
@@ -75,7 +83,10 @@ const INITIAL_STATE = {
   showBankLowWarning: true,
   bankLowThreshold: 10000,
   priceMultiplier: 1,
-  rentMultiplier: 1
+  rentMultiplier: 1,
+  groupHouseRentMode: 'standard',
+  showGroupHouseTotals: false,
+  undoEntries: []
 };
 
 export const useGameStore = create<GameStore>((set, get) => ({
@@ -142,17 +153,41 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
       if (gameRes.error) throw gameRes.error;
 
-      // Merge properties
+      // Merge properties: prefer 'properties' table if it exists so the board is dynamic/persistent
       type GamePropertyRow = { property_index: number; owner_id?: string | null; houses?: number; is_mortgaged?: boolean; price_override?: number | null; rent_override?: number[] | null };
       const dynamicProps = (propsRes.data || []) as GamePropertyRow[];
-      const mergedProperties = INITIAL_PROPERTIES.map(p => {
+
+      // Attempt to read base properties from 'properties' table which holds canonical board definitions
+      let baseProps = INITIAL_PROPERTIES;
+      try {
+        const baseRes = await supabase.from('properties').select('*').order('property_index');
+        if (baseRes.data && baseRes.data.length > 0) {
+          baseProps = baseRes.data.map((bp: any) => ({
+            id: bp.property_index,
+            name: bp.name,
+            type: bp.type,
+            group: bp.group,
+            price: bp.price ?? undefined,
+            rent: bp.rent ?? undefined,
+            houseCost: bp.house_cost ?? undefined,
+            houses: 0,
+            isMortgaged: false
+          }));
+        }
+      } catch (e) {
+        // If fetching base props fails, fallback to INITIAL_PROPERTIES
+      }
+
+      const mergedProperties = baseProps.map(p => {
         const dynamic = dynamicProps.find((dp) => dp.property_index === p.id);
         return dynamic ? { 
           ...p, 
           id: p.id,
           ownerId: dynamic.owner_id,
-          houses: dynamic.houses,
-          isMortgaged: dynamic.is_mortgaged
+          houses: dynamic.houses ?? p.houses ?? 0,
+          isMortgaged: dynamic.is_mortgaged ?? p.isMortgaged ?? false,
+          priceOverride: dynamic.price_override === null ? undefined : dynamic.price_override,
+          rentOverride: dynamic.rent_override === null ? undefined : dynamic.rent_override
         } : p;
       });
 
@@ -225,6 +260,31 @@ export const useGameStore = create<GameStore>((set, get) => ({
         jailBailAmount: gameRes.data.jail_bail_amount ?? get().jailBailAmount,
         bankTotal: gameRes.data.bank_total ?? get().bankTotal,
         bankLowThreshold: gameRes.data.bank_low_threshold ?? get().bankLowThreshold,
+        groupHouseRentMode: (gameRes.data.group_house_rent_mode as ('standard'|'groupTotal')) ?? get().groupHouseRentMode,
+        showGroupHouseTotals: (gameRes.data.show_group_house_totals === true) ?? get().showGroupHouseTotals,
+        // load undo entries for the game
+        undoEntries: (await (async () => {
+          try {
+            const u = await (supabase ? supabase.from('undo_history').select('*').eq('game_id', gameId).order('created_at', { ascending: false }) : Promise.resolve({ data: [] } as any));
+            return (u.data || []).map((row: any) => ({
+              id: row.id,
+              playerId: row.player_id,
+              performedBy: row.performed_by,
+              description: row.description,
+              prevPosition: row.prev_position,
+              newPosition: row.new_position,
+              prevIsJailed: row.prev_is_jailed,
+              newIsJailed: row.new_is_jailed,
+              passGoAwarded: row.pass_go_awarded,
+              createdAt: row.created_at ? new Date(row.created_at).getTime() : undefined,
+              reverted: row.reverted,
+              revertedAt: row.reverted_at ? new Date(row.reverted_at).getTime() : undefined,
+              revertedBy: row.reverted_by
+            }));
+          } catch (e) {
+            return [];
+          }
+        })()),
         isLoading: false
       });
 
@@ -445,6 +505,22 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set({ priceMultiplier, rentMultiplier });
   },
 
+  setGroupHouseRentMode: async (mode) => {
+    const { gameId } = get();
+    if (gameId && supabase) {
+      await supabase.from('games').update({ group_house_rent_mode: mode }).eq('id', gameId);
+    }
+    set({ groupHouseRentMode: mode });
+  },
+
+  setShowGroupHouseTotals: async (enabled) => {
+    const { gameId } = get();
+    if (gameId && supabase) {
+      await supabase.from('games').update({ show_group_house_totals: enabled }).eq('id', gameId);
+    }
+    set({ showGroupHouseTotals: Boolean(enabled) });
+  },
+
   setPropertyOverride: async (propertyId, priceOverride = null, rentOverride = null) => {
     const { gameId, properties } = get();
 
@@ -459,6 +535,28 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
     // Update local state (use undefined to mean no override)
     set({ properties: properties.map(p => p.id === propertyId ? { ...p, priceOverride: sanitizedPrice === null ? undefined : sanitizedPrice, rentOverride: sanitizedRent === null ? undefined : sanitizedRent } : p) });
+  },
+
+  setBaseProperty: async (propertyId, price = undefined, rent = undefined) => {
+    // Persist base property defaults into 'properties' table. If supabase isn't available, update local state.
+    if (supabase) {
+      try {
+        const upsertObj: any = { property_index: propertyId };
+        if (price !== undefined) upsertObj.price = price;
+        if (rent !== undefined) upsertObj.rent = rent;
+
+        await supabase.from('properties').upsert(upsertObj, { onConflict: 'property_index' });
+      } catch (e) {
+        // ignore DB errors but still update local state
+      }
+
+      // Update local state regardless to keep UI responsive
+      set({ properties: get().properties.map(p => p.id === propertyId ? { ...p, price: price ?? p.price, rent: rent ?? p.rent } : p) });
+      return;
+    }
+
+    // Local-only fallback
+    set({ properties: get().properties.map(p => p.id === propertyId ? { ...p, price: price ?? p.price, rent: rent ?? p.rent } : p) });
   },
 
   applySettingsToProperties: () => {
@@ -478,7 +576,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       return acc;
     }, {});
 
-    const merged = INITIAL_PROPERTIES.map(p => {
+    const merged = currentProps.map(p => {
       const state = currentStateMap[p.id] || {};
       const basePrice = p.price ? Math.round((p.price as number) * priceMul) : undefined;
       const finalPrice = state.priceOverride ?? basePrice;
@@ -503,10 +601,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
   resetSettings: async () => {
     const { gameId } = get();
     if (gameId && supabase) {
-      await supabase.from('games').update({ starting_money: 1500, jail_bail_amount: 50, price_multiplier: 1, rent_multiplier: 1, bank_total: 100000 }).eq('id', gameId);
+      await supabase.from('games').update({ starting_money: 1500, jail_bail_amount: 50, price_multiplier: 1, rent_multiplier: 1, bank_total: 100000, group_house_rent_mode: 'standard', show_group_house_totals: false }).eq('id', gameId);
       await supabase.from('game_properties').update({ price_override: null, rent_override: null }).eq('game_id', gameId);
     }
-    set({ startingMoney: 1500, jailBailAmount: 50, bankTotal: 100000, showBankLowWarning: true, priceMultiplier: 1, rentMultiplier: 1, properties: INITIAL_PROPERTIES });
+    set({ startingMoney: 1500, jailBailAmount: 50, bankTotal: 100000, showBankLowWarning: true, priceMultiplier: 1, rentMultiplier: 1, groupHouseRentMode: 'standard', showGroupHouseTotals: false, properties: INITIAL_PROPERTIES });
   },
 
   incrementJailTurns: async (playerId) => {
@@ -554,13 +652,17 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
   updateBalance: async (playerId, amount, type, description, toId) => {
     const { gameId, players } = get();
-    if (!supabase || !gameId) return;
-    
     const player = players.find(p => p.id === playerId);
     if (!player) return;
 
     const absAmount = Math.abs(amount);
-    
+
+    if (!supabase || !gameId) {
+      // Local-only fallback: update player balance optimistically and record a simple transaction
+      set({ players: players.map(p => p.id === playerId ? { ...p, balance: p.balance + amount } : p), transactions: [{ id: `local-${Date.now()}`, type, amount: absAmount, fromId: amount < 0 ? playerId : 'BANK', toId: amount > 0 ? (toId || playerId) : 'BANK', description, timestamp: Date.now() }, ...get().transactions].slice(0, 50) });
+      return;
+    }
+
     // Create transaction
     await supabase.from('transactions').insert({
       game_id: gameId,
@@ -609,18 +711,26 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
 
   movePlayer: async (playerId, position) => {
-    const { gameId } = get();
-    if (!supabase || !gameId) return;
+    const { gameId, players } = get();
+    if (!supabase || !gameId) {
+      // Local-only fallback for testability and local mode
+      set({ players: players.map(p => p.id === playerId ? { ...p, position } : p) });
+      return;
+    }
     
     await supabase.from('players').update({ position }).eq('id', playerId);
   },
 
   toggleJail: async (playerId) => {
     const { gameId, players } = get();
-    if (!supabase || !gameId) return;
-    
     const player = players.find(p => p.id === playerId);
     if (!player) return;
+
+    if (!supabase || !gameId) {
+      // Local-only fallback
+      set({ players: players.map(p => p.id === playerId ? { ...p, isJailed: !p.isJailed, jailTurns: 0 } : p) });
+      return;
+    }
 
     await supabase.from('players').update({ 
       is_jailed: !player.isJailed,
@@ -664,6 +774,122 @@ export const useGameStore = create<GameStore>((set, get) => ({
       // Local-only fallback
       set({ players: players.map(p => p.id === playerId ? { ...p, balance: p.balance + amount, loans: p.loans + amount } : p), bankTotal: bank - amount });
     }
+  },
+
+  recordUndo: async (playerId, description) => {
+    const { gameId, players } = get();
+    const timestamp = Date.now();
+
+    if (!supabase || !gameId) {
+      // Local-only fallback: record a zero-amount UNDO transaction so it's visible in history
+      set({ transactions: [{ id: `local-undo-${timestamp}`, type: 'UNDO', amount: 0, fromId: playerId, toId: 'BANK', description, timestamp }, ...get().transactions].slice(0, 50) });
+      return;
+    }
+
+    await supabase.from('transactions').insert({
+      game_id: gameId,
+      type: 'UNDO',
+      amount: 0,
+      from_id: playerId,
+      to_id: 'BANK',
+      description,
+      timestamp
+    });
+
+    // Also persist a small audit to undo_history for richer context
+    try {
+      await supabase.from('undo_history').insert({ game_id: gameId, player_id: playerId, performed_by: null, description, prev_position: 0, new_position: 0, prev_is_jailed: false, new_is_jailed: false, pass_go_awarded: 0 });
+    } catch (e) {
+      // ignore errors
+    }
+  },
+
+  addUndoEntry: async (entry) => {
+    const { gameId } = get();
+    if (!gameId) return;
+
+    if (!supabase) {
+      // local-only push
+      set({ undoEntries: [{ ...entry, createdAt: Date.now(), id: Math.floor(Math.random() * 1000000) }, ...(get().undoEntries || [])] });
+      return;
+    }
+
+    try {
+      const payload: any = {
+        game_id: gameId,
+        player_id: entry.playerId,
+        performed_by: entry.performedBy ?? null,
+        description: entry.description ?? null,
+        prev_position: entry.prevPosition,
+        new_position: entry.newPosition,
+        prev_is_jailed: entry.prevIsJailed,
+        new_is_jailed: entry.newIsJailed,
+        pass_go_awarded: entry.passGoAwarded ?? 0
+      };
+      const res = await supabase.from('undo_history').insert(payload).select().single();
+      if (res.data) {
+        const row = res.data as any;
+        const mapped = { id: row.id, playerId: row.player_id, performedBy: row.performed_by, description: row.description, prevPosition: row.prev_position, newPosition: row.new_position, prevIsJailed: row.prev_is_jailed, newIsJailed: row.new_is_jailed, passGoAwarded: row.pass_go_awarded, createdAt: new Date(row.created_at).getTime(), reverted: row.reverted };
+        set({ undoEntries: [mapped, ...(get().undoEntries || [])] });
+      }
+    } catch (e) {
+      // ignore errors
+    }
+  },
+
+  fetchUndoEntries: async () => {
+    const { gameId } = get();
+    if (!gameId) return;
+    if (!supabase) return;
+    try {
+      const res = await supabase.from('undo_history').select('*').eq('game_id', gameId).order('created_at', { ascending: false });
+      const entries = (res.data || []).map((row: any) => ({ id: row.id, playerId: row.player_id, performedBy: row.performed_by, description: row.description, prevPosition: row.prev_position, newPosition: row.new_position, prevIsJailed: row.prev_is_jailed, newIsJailed: row.new_is_jailed, passGoAwarded: row.pass_go_awarded, createdAt: row.created_at ? new Date(row.created_at).getTime() : undefined, reverted: row.reverted, revertedAt: row.reverted_at ? new Date(row.reverted_at).getTime() : undefined, revertedBy: row.reverted_by }));
+      set({ undoEntries: entries });
+    } catch (e) {
+      // ignore
+    }
+  },
+
+  revertUndoEntry: async (entryId, actorId = null) => {
+    const entry = (get().undoEntries || []).find(e => e.id === entryId);
+    if (!entry) return false;
+    if (entry.reverted) return false;
+
+    // apply revert locally first (if player exists)
+    const player = get().players.find(p => p.id === entry.playerId);
+    if (player) {
+      // restore position
+      await get().movePlayer(entry.playerId, entry.prevPosition);
+      // restore jailed state if differs
+      if ((get().players.find(p => p.id === entry.playerId)?.isJailed) !== entry.prevIsJailed) {
+        await get().toggleJail(entry.playerId);
+      }
+
+      // reverse pass GO award if any
+      if (entry.passGoAwarded && entry.passGoAwarded > 0) {
+        await get().updateBalance(entry.playerId, -entry.passGoAwarded, 'UNDO', `Revert Pass GO from undo #${entryId}`);
+      }
+    } else {
+      // Player not found (local-only scenarios); still allow marking entry reverted for audit
+    }
+
+    // mark reverted in DB and local state
+    const timestamp = new Date().toISOString();
+    if (supabase) {
+      try {
+        await supabase.from('undo_history').update({ reverted: true, reverted_at: timestamp, reverted_by: actorId }).eq('id', entryId);
+      } catch (e) {
+        // ignore
+      }
+    }
+
+    // local mark
+    set({ undoEntries: (get().undoEntries || []).map(u => u.id === entryId ? { ...u, reverted: true, revertedAt: Date.now(), revertedBy: actorId } : u) });
+
+    // record transaction audit
+    await get().recordUndo(entry.playerId, `Reverted undo #${entryId} by ${actorId ?? 'local'}`);
+
+    return true;
   },
 
   repayLoan: async (playerId, amount) => {

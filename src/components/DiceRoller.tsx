@@ -119,11 +119,13 @@ const DiceRollerComponent: React.FC<DiceRollerProps> = ({ onRollComplete }) => {
     setShowResult(true);
   };
 
+  const rentMode = useGameStore(state => state.groupHouseRentMode ?? 'standard');
+
   const analyzeLanding = (pos: number, rollTotal: number) => {
     const property = properties.find(p => p.id === pos);
     if (!property) return;
 
-    const rent = calculateRent(property, properties, rollTotal);
+    const rent = calculateRent(property, properties, rollTotal, rentMode);
     const owner = players.find(p => p.id === property.ownerId);
 
     // Tax Logic

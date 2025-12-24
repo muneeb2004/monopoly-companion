@@ -30,7 +30,7 @@ export interface Player {
   loans: number; // Total amount borrowed
 }
 
-export type TransactionType = 'RENT' | 'BUY_PROPERTY' | 'PASS_GO' | 'TAX' | 'TRADE' | 'SALARY' | 'OTHER';
+export type TransactionType = 'RENT' | 'BUY_PROPERTY' | 'PASS_GO' | 'TAX' | 'TRADE' | 'SALARY' | 'UNDO' | 'OTHER';
 
 export interface Transaction {
   id: string;
@@ -56,6 +56,22 @@ export interface Trade {
   createdAt: number;
 }
 
+export interface UndoEntry {
+  id?: number; // assigned by DB when persisted
+  playerId: string;
+  performedBy?: string | null;
+  description?: string | null;
+  prevPosition: number;
+  newPosition: number;
+  prevIsJailed: boolean;
+  newIsJailed: boolean;
+  passGoAwarded: number;
+  createdAt?: number;
+  reverted?: boolean;
+  revertedAt?: number | null;
+  revertedBy?: string | null;
+}
+
 export interface GameState {
   players: Player[];
   properties: Property[];
@@ -64,12 +80,17 @@ export interface GameState {
   trades?: Trade[]; // Optional for backward compatibility during migration
   turnCount: number;
   diceMode: 'DIGITAL' | 'PHYSICAL';
+  // Undo entries persisted/loaded for audit
+  undoEntries?: UndoEntry[];
+
 
   // Game settings
   startingMoney?: number;
   priceMultiplier?: number; // multiply base price by this
   rentMultiplier?: number;  // multiply base rent by this
   jailBailAmount?: number;
+  // New rent mode setting: 'standard' = per-property houses (Monopoly default), 'groupTotal' = rent determined by total houses across color group
+  groupHouseRentMode?: 'standard' | 'groupTotal';
   // Bank settings
   bankTotal?: number;
   bankLowThreshold?: number;

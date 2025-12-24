@@ -2,6 +2,9 @@ import React, { useState } from 'react';
 import { useGameStore } from '../store/gameStore';
 import { X, ChevronDown, ChevronUp, Home, Ban, Trophy } from 'lucide-react';
 import { cn, calculateRent } from '../lib/utils';
+
+// Read rent mode from store to support group-total mode
+import { useGameStore } from '../store/gameStore';
 import type { Property } from '../types';
 
 interface PropertyManagerProps {
@@ -80,13 +83,15 @@ const PropertyManagerComponent: React.FC<PropertyManagerProps> = ({ isOpen, onCl
     return firstOwner && groupProps.every(p => p.ownerId === firstOwner);
   };
 
+  const rentMode = useGameStore(state => state.groupHouseRentMode ?? 'standard');
+
   const getRentDisplay = (property: Property) => {
     if (property.group === 'utility') return '4x / 10x Dice';
     if (!property.rent) return 'N/A';
     
     // Calculate current rent assuming 7 for utilities (though handled above)
     // and passing all properties to check for monopoly/railroads
-    const currentRent = calculateRent(property, properties, 7); 
+    const currentRent = calculateRent(property, properties, 7, rentMode); 
     return `$${currentRent}`;
   };
 

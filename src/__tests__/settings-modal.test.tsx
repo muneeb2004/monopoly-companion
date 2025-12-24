@@ -55,4 +55,26 @@ describe('SettingsModal UI', () => {
     expect(bankGrid).toBeTruthy();
     expect(bankGrid?.className).toContain('grid-cols-1');
   });
+
+  it('saves rent calculation mode to store', async () => {
+    const onClose = vi.fn();
+    useGameStore.setState({ groupHouseRentMode: 'standard' });
+
+    const { container } = render(<SettingsModal isOpen={true} onClose={onClose} />);
+
+    // Select groupTotal mode
+    const select = container.querySelector('select#rent-mode') as HTMLSelectElement;
+    expect(select).toBeTruthy();
+
+    // Change selection
+    await act(async () => {
+      select.value = 'groupTotal';
+      fireEvent.change(select, { target: { value: 'groupTotal' } });
+      const saveBtn = screen.getByText('Save');
+      fireEvent.click(saveBtn);
+      await new Promise(res => setTimeout(res, 1200));
+    });
+
+    expect(useGameStore.getState().groupHouseRentMode).toBe('groupTotal');
+  });
 });

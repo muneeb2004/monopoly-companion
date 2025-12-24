@@ -35,6 +35,12 @@ A feature-rich, real-time Monopoly companion app built with **React**, **TypeScr
     - **Jail Rules**: Configure the bail amount. Choose to pay bail (ends turn) or serve time (skip 3 turns).
     - **Advanced Overrides**: Manually edit the rent or price of specific board properties.
 
+    - **Rent Calculation Mode**: You can choose how street rent is calculated when a single player owns an entire color group (a monopoly):
+      - **Standard** (default): Uses per-property houses/hotels. If no houses are built on the property, base rent is **doubled** for monopoly holdings (classic Monopoly rule).
+      - **Group Total**: When a player owns the whole color group, rent is computed from the **total number of houses across the whole group** (summed, capped at 5 = hotel) and the target property’s rent table is indexed by that total. If there are no houses across the group, it falls back to the monopoly double of base rent.
+
+    - **Visual Indicators (optional)**: Enable an optional UI indicator to show the combined house count for a monopolized color group on the board. This is configurable in **Settings → Rent Calculation Mode → Show group house totals**.
+
 ### 📱 Mobile-First Design
 - **Responsive Layout**: Optimized for phones and tablets.
 - **Action Center**: A scrolling action bar on mobile keeps essential controls accessible.

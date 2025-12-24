@@ -20,6 +20,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
   const setShowBankLowWarning = useGameStore(state => state.setShowBankLowWarning);
   const setBankLowThreshold = useGameStore(state => state.setBankLowThreshold);
   const setMultipliers = useGameStore(state => state.setMultipliers);
+  const setGroupHouseRentMode = useGameStore(state => state.setGroupHouseRentMode);
+  const groupHouseRentMode = useGameStore(state => state.groupHouseRentMode ?? 'standard');
+  const setShowGroupHouseTotals = useGameStore(state => state.setShowGroupHouseTotals);
+  const showGroupHouseTotals = useGameStore(state => state.showGroupHouseTotals ?? false);
   const applySettingsToProperties = useGameStore(state => state.applySettingsToProperties);
   const resetSettings = useGameStore(state => state.resetSettings); 
 
@@ -33,6 +37,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
   const [bth, setBth] = useState<string>(String(bankLowThreshold));
   const [pm, setPm] = useState<string>(String(priceMultiplier));
   const [rm, setRm] = useState<string>(String(rentMultiplier));
+  const [rentCalcMode, setRentCalcMode] = useState<'standard'|'groupTotal'>(() => (useGameStore.getState().groupHouseRentMode ?? 'standard'));
+  const [showGroupTotalsChecked, setShowGroupTotalsChecked] = useState<boolean>(() => Boolean(useGameStore.getState().showGroupHouseTotals ?? false));
+
 
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const [propOverrides, setPropOverrides] = useState(() => {
@@ -50,6 +57,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
     setShowBankWarn(Boolean(useGameStore.getState().showBankLowWarning));
     setPm(String(priceMultiplier));
     setRm(String(rentMultiplier));
+    setRentCalcMode(useGameStore.getState().groupHouseRentMode ?? 'standard');
     setPropOverrides((useGameStore.getState().properties || []).map(pr => ({ id: pr.id, name: pr.name, priceOverride: pr.priceOverride ?? '', rentOverride: pr.rentOverride ? pr.rentOverride.join(',') : '' })));
   }, [isOpen, startingMoney, jailBailAmount, bankTotal, bankLowThreshold, priceMultiplier, rentMultiplier]);
 
@@ -63,9 +71,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
       if (typeof setStartingMoney === 'function') await setStartingMoney(Number(sm));
       if (typeof setJailBailAmount === 'function') await setJailBailAmount(Number(jba));
       if (typeof setMultipliers === 'function') await setMultipliers(Number(pm), Number(rm));
-      if (typeof setBankTotal === 'function') await setBankTotal(Number(bt));
-      if (typeof setBankLowThreshold === 'function') await setBankLowThreshold(Number(bth));
-      if (typeof setShowBankLowWarning === 'function') setShowBankLowWarning(Boolean(showBankWarn));
+      if (typeof setGroupHouseRentMode === 'function') await setGroupHouseRentMode(rentCalcMode);
+      if (typeof setShowGroupHouseTotals === 'function') await setShowGroupHouseTotals(showGroupTotalsChecked);
 
       // Persist per-property overrides (run regardless)
       for (const o of propOverrides) {
@@ -104,8 +111,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
   };
 
   return (
-    <BottomSheet isOpen={isOpen} onClose={onClose} title={<><Settings2 size={20} /><span>Game Settings</span></>}>
-      <div className="space-y-4">
+    <BottomSheet isOpen={isOpen} onClose={onClose} title={<><Settings2 size={20} /><span>Game Settings</span></>} className="max-w-3xl">
+      <div className="space-y-6 md:space-y-8">
         <div>
           <label className="block text-sm font-medium text-slate-700">Advanced: Individual Property Overrides</label>
           <button onClick={() => setAdvancedOpen(prev => !prev)} className="mt-2 text-xs text-slate-500">{advancedOpen ? 'Hide' : 'Show'} property overrides</button>
@@ -177,6 +184,20 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
           <label htmlFor="rent-multiplier" className="block text-sm font-medium text-slate-700">Rent Multiplier</label>
             <input id="rent-multiplier" type="number" step="0.1" inputMode="decimal" pattern="[0-9]*[.,]?[0-9]*" value={rm} onChange={(e) => setRm(e.target.value)} className="w-full mt-2 p-2 border rounded" />
           <div className="text-xs text-slate-400 mt-1">Multiply base rent values (1 = no change)</div>
+        </div>
+
+        <div>
+          <label htmlFor="rent-mode" className="block text-sm font-medium text-slate-700">Rent Calculation Mode</label>
+          <select id="rent-mode" value={rentCalcMode} onChange={(e) => setRentCalcMode(e.target.value as 'standard' | 'groupTotal')} className="w-full mt-2 p-2 border rounded">
+            <option value="standard">Standard (per-property houses, monopoly doubles base rent)</option>
+            <option value="groupTotal">Group total (rent based on total houses across the color group when monopoly)</option>
+          </select>
+          <div className="text-xs text-slate-400 mt-1">Choose how street rent is calculated when a player owns an entire color group.</div>
+
+          <div className="mt-3 flex items-center gap-2">
+            <input id="show-group-house-totals" type="checkbox" checked={showGroupTotalsChecked} onChange={(e) => setShowGroupTotalsChecked(e.target.checked)} />
+            <label htmlFor="show-group-house-totals" className="text-sm text-slate-700">Show group house totals on board</label>
+          </div>
         </div>
 
         <div className="p-4 border-t border-slate-100 flex items-center gap-2 sticky sm:static bottom-0 bg-white z-10">

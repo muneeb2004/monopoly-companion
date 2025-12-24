@@ -30,7 +30,7 @@ export function formatNumberInput(value: string | number | null | undefined) {
   return n.toLocaleString();
 }
 
-export function calculateRent(targetProperty: Property, allProperties: Property[], diceRoll: number = 7): number {
+export function calculateRent(targetProperty: Property, allProperties: Property[], diceRoll: number = 7, rentMode: 'standard' | 'groupTotal' = 'standard'): number {
   if (!targetProperty.ownerId || targetProperty.isMortgaged) return 0;
 
   const ownerId = targetProperty.ownerId;
@@ -40,11 +40,23 @@ export function calculateRent(targetProperty: Property, allProperties: Property[
     case 'street': {
       const groupProperties = allProperties.filter(p => p.group === targetProperty.group);
       const hasMonopoly = groupProperties.every(p => p.ownerId === ownerId);
-      
+
+      // If group-total mode and owner has monopoly, derive rent from total houses across group
+      if (rentMode === 'groupTotal' && hasMonopoly) {
+        const totalHouses = Math.min(5, groupProperties.reduce((sum, p) => sum + (p.houses || 0), 0));
+        if (totalHouses > 0) {
+          return targetProperty.rent ? targetProperty.rent[totalHouses] : 0;
+        }
+        // fallback to monopoly doubling when no houses built
+        const baseRent = targetProperty.rent ? targetProperty.rent[0] : 0;
+        return baseRent * 2;
+      }
+
+      // Standard mode (or groupTotal without monopoly): per-property houses take precedence
       if (targetProperty.houses > 0) {
         return targetProperty.rent ? targetProperty.rent[targetProperty.houses] : 0;
       }
-      
+
       // Base rent (doubled if monopoly)
       const baseRent = targetProperty.rent ? targetProperty.rent[0] : 0;
       return hasMonopoly ? baseRent * 2 : baseRent;

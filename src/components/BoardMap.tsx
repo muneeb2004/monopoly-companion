@@ -13,6 +13,7 @@ interface BoardMapProps {
 const BoardMapComponent: React.FC<BoardMapProps> = ({ isOpen, onClose, isSpectator = false }) => {
   const players = useGameStore(state => state.players);
   const properties = useGameStore(state => state.properties);
+  const showGroupHouseTotals = useGameStore(state => state.showGroupHouseTotals ?? false);
   
   if (!isOpen) return null;
 
@@ -109,6 +110,25 @@ const BoardMapComponent: React.FC<BoardMapProps> = ({ isOpen, onClose, isSpectat
                         title={`Owned by ${ownerPlayer.name}`}
                       />
                     )}
+
+                    {/* Optional group house total badge when monopoly and setting enabled */}
+                    {ownerPlayer && showGroupHouseTotals && (() => {
+                      // Check if owner owns all group properties
+                      const groupProps = properties.filter(p => p.group === prop.group);
+                      if (groupProps.length === 0) return null;
+                      const monopolyOwner = groupProps[0].ownerId;
+                      const isMonopoly = monopolyOwner && groupProps.every(gp => gp.ownerId === monopolyOwner);
+                      if (!isMonopoly) return null;
+
+                      const totalHouses = Math.min(5, groupProps.reduce((s, gp) => s + (gp.houses || 0), 0));
+                      if (totalHouses === 0) return null;
+
+                      return (
+                        <div className="absolute top-0 right-0 m-1 bg-green-600 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center" title={`Total houses in group: ${totalHouses}`}>
+                          {totalHouses === 5 ? 'H' : totalHouses}
+                        </div>
+                      );
+                    })()}
                   </div>
 
                   {/* Player Tokens */}
