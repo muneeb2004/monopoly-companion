@@ -48,6 +48,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
 
   useEffect(() => {
+    // Dev log: SettingsModal mount/update
+    console.log('[DEBUG] SettingsModal mounted/updated', { isOpen, startingMoney, jailBailAmount, bankTotal });
+
     setSm(String(startingMoney));
     setJba(String(jailBailAmount));
     setBt(String(bankTotal));
