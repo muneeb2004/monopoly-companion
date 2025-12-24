@@ -3,7 +3,8 @@ import { useGameStore } from './store/gameStore';
 import { SetupScreen } from './components/SetupScreen';
 import { Dashboard } from './components/Dashboard';
 import { BoardMap } from './components/BoardMap';
-import { Plus, Loader2, ArrowRight, Eye } from 'lucide-react';
+import { SettingsModal } from './components/SettingsModal';
+import { Plus, Loader2, ArrowRight, Eye, Settings2 } from 'lucide-react';
 
 function App() {
   const { gameStatus, gameId, isLoading, error, createNewGame, joinGame } = useGameStore();
@@ -51,6 +52,8 @@ function App() {
   };
 
   const toastMessage = useGameStore(state => state.toastMessage);
+  // Dev-only quick open for Settings (useful if header button is missing in local runs)
+  const [showDebugSettings, setShowDebugSettings] = useState(false);
 
   if (isLoading || isRestoring) {
     return (
@@ -178,7 +181,15 @@ function App() {
           {toastMessage}
         </div>
       )}
-    </div>
+      {/* Dev-only floating settings button (shows only in non-production) */}
+      {process.env.NODE_ENV !== 'production' && (
+        <>
+          <button onClick={() => setShowDebugSettings(true)} title="Open Settings (dev)" className="fixed bottom-4 right-4 z-50 p-3 bg-slate-900 text-white rounded-full shadow-lg hover:scale-105 transition-transform">
+            <Settings2 />
+          </button>
+          <SettingsModal isOpen={showDebugSettings} onClose={() => setShowDebugSettings(false)} />
+        </>
+      )}    </div>
   );
 }
 
