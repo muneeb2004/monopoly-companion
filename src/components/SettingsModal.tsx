@@ -3,13 +3,14 @@ import { Settings2 } from 'lucide-react';
 import { useGameStore } from '../store/gameStore';
 import { BottomSheet } from './BottomSheet';
 import { formatNumberInput } from '../lib/utils';
+import { ErrorBoundary } from './ErrorBoundary';
 
 interface SettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
+const SettingsModalInner: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
   const startingMoney = useGameStore(state => state.startingMoney ?? 1500);
   const jailBailAmount = useGameStore(state => state.jailBailAmount ?? 50);
   const priceMultiplier = useGameStore(state => state.priceMultiplier ?? 1);
@@ -236,4 +237,23 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
       </div>
     </BottomSheet>
   );
+};
+
+export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
+  try {
+    return (
+      <ErrorBoundary>
+        <SettingsModalInner isOpen={isOpen} onClose={onClose} />
+      </ErrorBoundary>
+    );
+  } catch (err: any) {
+    console.error('SettingsModal render caught:', err);
+    return (
+      <div className="p-6">
+        <h3 className="text-lg font-bold text-red-700">Settings failed to render</h3>
+        <p className="text-sm text-slate-500 mt-2">An error occurred while opening settings. Check the console for details.</p>
+        <pre className="mt-3 text-xs text-slate-700 bg-slate-100 p-2 rounded">{String(err?.message || err)}</pre>
+      </div>
+    );
+  }
 };
