@@ -77,7 +77,7 @@ const BoardMapComponent: React.FC<BoardMapProps> = ({ isOpen, onClose, isSpectat
             
             {/* Center Board (Logo area) */}
             <div className="col-start-2 col-end-11 row-start-2 row-end-11 bg-[#CEE6D0] flex flex-col items-center justify-center relative">
-               <h1 className="text-4xl md:text-6xl font-black text-slate-800 tracking-widest -rotate-45 opacity-20 select-none">MONOPOLY</h1>
+               <img src="/monopoly-logo.png" alt="Monopoly" className="w-40 h-auto opacity-90" />
                {/* Legend or other info could go here */}
             </div>
 

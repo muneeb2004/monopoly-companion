@@ -4,7 +4,8 @@ const path = require('path');
 
 (async () => {
   try {
-    const src = path.resolve(__dirname, '..', 'public', 'vite.svg');
+    // Use the provided Monopoly logo in public/monopoly-logo.png
+    const src = path.resolve(__dirname, '..', 'public', 'monopoly-logo.png');
     const outDir = path.resolve(__dirname, '..', 'public', 'icons');
     if (!fs.existsSync(outDir)) fs.mkdirSync(outDir, { recursive: true });
 

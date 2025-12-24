@@ -3,7 +3,7 @@ import { useGameStore } from './store/gameStore';
 import { SetupScreen } from './components/SetupScreen';
 import { Dashboard } from './components/Dashboard';
 import { BoardMap } from './components/BoardMap';
-import { Plus, Users, Loader2, ArrowRight, Eye } from 'lucide-react';
+import { Plus, Loader2, ArrowRight, Eye } from 'lucide-react';
 
 function App() {
   const { gameStatus, gameId, isLoading, error, createNewGame, joinGame } = useGameStore();
@@ -74,8 +74,8 @@ function App() {
         <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md border border-slate-200">
             <div className="text-center mb-8">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4">
-                <Users className="w-8 h-8 text-blue-600" />
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-white rounded-full mb-4 overflow-hidden">
+                <img src="/monopoly-logo.png" alt="Monopoly" className="w-full h-full object-contain" />
               </div>
               <h1 className="text-3xl font-bold text-slate-800">Monopoly Tracker</h1>
               <p className="text-slate-500 mt-2">Create a new session or join existing</p>
