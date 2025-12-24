@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useGameStore } from '../store/gameStore';
 import { X, Delete, Calculator } from 'lucide-react';
 import { cn } from '../lib/utils';
@@ -20,12 +20,49 @@ const CalculatorModalComponent: React.FC<CalculatorModalProps> = ({ isOpen, onCl
   // Update selected player when modal opens or current player changes
   useEffect(() => {
     if (isOpen && players.length > 0) {
-      setSelectedPlayerId(players[currentPlayerIndex].id);
-      setValue('0');
+      // Avoid calling setState synchronously inside an effect to prevent cascading renders
+      const id = window.setTimeout(() => {
+        setSelectedPlayerId(players[currentPlayerIndex].id);
+        setValue('0');
+      }, 0);
+      return () => clearTimeout(id);
     }
   }, [isOpen, currentPlayerIndex, players]);
 
-  // Keyboard support
+  // Handlers
+  const handleNumberClick = (num: string) => {
+    setValue(prev => {
+      if (prev === '0') return num;
+      if (prev.length >= 9) return prev; // Max length limit
+      return prev + num;
+    });
+  };
+
+  const handleBackspace = () => {
+    setValue(prev => {
+      if (prev.length <= 1) return '0';
+      return prev.slice(0, -1);
+    });
+  };
+
+  const handleClear = () => {
+    setValue('0');
+  };
+
+  const executeTransaction = useCallback((type: 'ADD' | 'DEDUCT') => {
+    const amount = parseInt(value, 10);
+    if (amount <= 0 || !selectedPlayerId) return;
+
+    const finalAmount = type === 'ADD' ? amount : -amount;
+    const description = type === 'ADD' ? 'Manual Deposit' : 'Manual Deduction';
+    
+    updateBalance(selectedPlayerId, finalAmount, 'OTHER', description);
+    
+    // Close after executing
+    onClose();
+  }, [value, selectedPlayerId, updateBalance, onClose]);
+
+  // Keyboard support (uses handlers declared above)
   useEffect(() => {
     if (!isOpen) return;
 
@@ -54,43 +91,7 @@ const CalculatorModalComponent: React.FC<CalculatorModalProps> = ({ isOpen, onCl
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, value, selectedPlayerId]); // Dependencies needed for handlers called inside
-
-  if (!isOpen) return null;
-
-  const handleNumberClick = (num: string) => {
-    setValue(prev => {
-      if (prev === '0') return num;
-      if (prev.length >= 9) return prev; // Max length limit
-      return prev + num;
-    });
-  };
-
-  const handleBackspace = () => {
-    setValue(prev => {
-      if (prev.length <= 1) return '0';
-      return prev.slice(0, -1);
-    });
-  };
-
-  const handleClear = () => {
-    setValue('0');
-  };
-
-  const executeTransaction = (type: 'ADD' | 'DEDUCT') => {
-    const amount = parseInt(value, 10);
-    if (amount <= 0 || !selectedPlayerId) return;
-
-    const finalAmount = type === 'ADD' ? amount : -amount;
-    const description = type === 'ADD' ? 'Manual Deposit' : 'Manual Deduction';
-    
-    updateBalance(selectedPlayerId, finalAmount, 'OTHER', description);
-    
-    // Optional: Close on success or just reset value? 
-    // Usually convenient to close, but for a "banker" mode maybe keeping open is better.
-    // Let's close for now to be consistent with other modals.
-    onClose();
-  };
+  }, [isOpen, executeTransaction]); // Dependencies needed for handlers called inside
 
   const selectedPlayer = players.find(p => p.id === selectedPlayerId);
 

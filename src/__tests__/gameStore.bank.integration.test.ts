@@ -31,7 +31,7 @@ describe('Bank integration: borrow and repay sequence (mocked DB)', () => {
   });
 
   it('performs borrow then repay and updates DB & local state', async () => {
-    const fromMock = (supabase.from as unknown as jest.Mock);
+    const fromMock = (supabase!.from as unknown as jest.Mock);
     const stateBefore = useGameStore.getState();
     expect(stateBefore.bankTotal).toBe(1000);
 
@@ -47,7 +47,7 @@ describe('Bank integration: borrow and repay sequence (mocked DB)', () => {
     expect(afterBorrow.bankTotal).toBe(700);
 
     // Ensure DB calls were made
-    const fromArgs = fromMock.mock.calls.map((c: any) => c[0]);
+    const fromArgs = fromMock.mock.calls.map((c: readonly unknown[]) => c[0]);
     expect(fromArgs).toContain('transactions');
     expect(fromArgs).toContain('players');
     expect(fromArgs).toContain('games');
@@ -64,7 +64,7 @@ describe('Bank integration: borrow and repay sequence (mocked DB)', () => {
     expect(afterRepay.bankTotal).toBe(800);
 
     // Ensure DB transactions were attempted for repayment as well
-    const fromArgs2 = fromMock.mock.calls.map((c: any) => c[0]);
+    const fromArgs2 = fromMock.mock.calls.map((c: readonly unknown[]) => c[0]);
     expect(fromArgs2).toContain('transactions');
     expect(fromArgs2).toContain('players');
     expect(fromArgs2).toContain('games');

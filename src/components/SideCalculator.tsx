@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useGameStore } from '../store/gameStore';
 import { Delete, ChevronLeft, ChevronRight, Calculator } from 'lucide-react';
 import { cn } from '../lib/utils';
@@ -9,17 +9,49 @@ export const SideCalculator: React.FC = () => {
   const updateBalance = useGameStore(state => state.updateBalance);
   
   const [isOpen, setIsOpen] = useState(true);
-  const [selectedPlayerId, setSelectedPlayerId] = useState<string>('');
+  const [selectedPlayerId, setSelectedPlayerId] = useState<string>(players[currentPlayerIndex]?.id ?? '');
   const [value, setValue] = useState<string>('0');
   
   // Update selected player when current player changes
   useEffect(() => {
     if (players.length > 0) {
-      setSelectedPlayerId(players[currentPlayerIndex].id);
+      const id = window.setTimeout(() => setSelectedPlayerId(players[currentPlayerIndex].id), 0);
+      return () => clearTimeout(id);
     }
   }, [currentPlayerIndex, players]);
 
-  // Keyboard support
+  // Handlers
+  const handleNumberClick = (num: string) => {
+    setValue(prev => {
+      if (prev === '0') return num;
+      if (prev.length >= 9) return prev;
+      return prev + num;
+    });
+  };
+
+  const handleBackspace = () => {
+    setValue(prev => {
+      if (prev.length <= 1) return '0';
+      return prev.slice(0, -1);
+    });
+  };
+
+  const handleClear = () => {
+    setValue('0');
+  };
+
+  const executeTransaction = useCallback((type: 'ADD' | 'DEDUCT') => {
+    const amount = parseInt(value, 10);
+    if (amount <= 0 || !selectedPlayerId) return;
+
+    const finalAmount = type === 'ADD' ? amount : -amount;
+    const description = type === 'ADD' ? 'Manual Deposit' : 'Manual Deduction';
+
+    updateBalance(selectedPlayerId, finalAmount, 'OTHER', description);
+    setValue('0');
+  }, [value, selectedPlayerId, updateBalance]);
+
+  // Keyboard support (uses handlers declared above)
   useEffect(() => {
     if (!isOpen) return;
 
@@ -60,37 +92,7 @@ export const SideCalculator: React.FC = () => {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, value, selectedPlayerId]);
-
-  const handleNumberClick = (num: string) => {
-    setValue(prev => {
-      if (prev === '0') return num;
-      if (prev.length >= 9) return prev;
-      return prev + num;
-    });
-  };
-
-  const handleBackspace = () => {
-    setValue(prev => {
-      if (prev.length <= 1) return '0';
-      return prev.slice(0, -1);
-    });
-  };
-
-  const handleClear = () => {
-    setValue('0');
-  };
-
-  const executeTransaction = (type: 'ADD' | 'DEDUCT') => {
-    const amount = parseInt(value, 10);
-    if (amount <= 0 || !selectedPlayerId) return;
-
-    const finalAmount = type === 'ADD' ? amount : -amount;
-    const description = type === 'ADD' ? 'Manual Deposit' : 'Manual Deduction';
-    
-    updateBalance(selectedPlayerId, finalAmount, 'OTHER', description);
-    setValue('0');
-  };
+  }, [isOpen, executeTransaction]);
 
   const selectedPlayer = players.find(p => p.id === selectedPlayerId);
 

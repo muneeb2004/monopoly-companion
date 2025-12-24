@@ -30,8 +30,8 @@ describe('Bank settings and loan behavior (with supabase)', () => {
     const state = useGameStore.getState();
     expect(state.bankTotal).toBe(800);
 
-    expect((supabase.from as unknown as jest.Mock).mock.calls.length).toBeGreaterThan(0);
-    expect((supabase.from as unknown as jest.Mock).mock.calls.some(c => c[0] === 'games')).toBe(true);
+    expect((supabase!.from as unknown as jest.Mock).mock.calls.length).toBeGreaterThan(0);
+    expect((supabase!.from as unknown as jest.Mock).mock.calls.some(c => c[0] === 'games')).toBe(true);
   });
 
   it('takeLoan reduces bank and increases player balance when bank has funds', async () => {
@@ -44,7 +44,7 @@ describe('Bank settings and loan behavior (with supabase)', () => {
     expect(state.bankTotal).toBe(800);
 
     // Ensure DB calls were made (transactions, players, games updates)
-    const fromCalls = (supabase.from as unknown as jest.Mock).mock.calls.map(c => c[0]);
+    const fromCalls = (supabase!.from as unknown as jest.Mock).mock.calls.map(c => c[0]);
     expect(fromCalls).toContain('transactions');
     expect(fromCalls).toContain('players');
     expect(fromCalls).toContain('games');

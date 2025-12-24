@@ -70,4 +70,8 @@ export interface GameState {
   priceMultiplier?: number; // multiply base price by this
   rentMultiplier?: number;  // multiply base rent by this
   jailBailAmount?: number;
-}
+  // Bank settings
+  bankTotal?: number;
+  bankLowThreshold?: number;
+  showBankLowWarning?: boolean;
+} 

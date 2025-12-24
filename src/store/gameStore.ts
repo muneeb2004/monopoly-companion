@@ -61,7 +61,7 @@ const INITIAL_STATE = {
   transactions: [],
   trades: [],
   turnCount: 1,
-  diceMode: 'DIGITAL' as 'DIGITAL',
+  diceMode: 'DIGITAL' as const,
   startingMoney: 1500,
   jailBailAmount: 50,
   bankTotal: 100000,
@@ -101,8 +101,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
       set({ gameId, gameStatus: 'SETUP', diceMode: 'DIGITAL', isLoading: false });
       get().joinGame(gameId); // Subscribe
       return gameId;
-    } catch (err: any) {
-      set({ error: err.message, isLoading: false });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      set({ error: msg, isLoading: false });
       return null;
     }
   },
@@ -111,6 +112,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
     if (!supabase) return false;
     set({ isLoading: true, error: null });
 
+    // Supabase payloads are loosely typed - allow 'any' in this block
+    /* eslint-disable @typescript-eslint/no-explicit-any */
     try {
       // Fetch initial state
       const [gameRes, playersRes, propsRes, txsRes, tradesRes] = await Promise.all([
@@ -124,9 +127,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
       if (gameRes.error) throw gameRes.error;
 
       // Merge properties
-      const dynamicProps = propsRes.data || [];
+      type GamePropertyRow = { property_index: number; owner_id?: string | null; houses?: number; is_mortgaged?: boolean; price_override?: number | null; rent_override?: number[] | null };
+      const dynamicProps = (propsRes.data || []) as GamePropertyRow[];
       const mergedProperties = INITIAL_PROPERTIES.map(p => {
-        const dynamic = dynamicProps.find((dp: any) => dp.property_index === p.id);
+        const dynamic = dynamicProps.find((dp) => dp.property_index === p.id);
         return dynamic ? { 
           ...p, 
           id: p.id,
@@ -291,11 +295,13 @@ export const useGameStore = create<GameStore>((set, get) => ({
         .subscribe();
 
       return true;
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
-      set({ error: err.message, isLoading: false });
+      const msg = err instanceof Error ? err.message : String(err);
+      set({ error: msg, isLoading: false });
       return false;
     }
+    /* eslint-enable @typescript-eslint/no-explicit-any */
   },
 
   leaveGame: () => {
@@ -426,7 +432,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const currentProps = get().properties;
 
     // Create a map of current state to preserve
-    const currentStateMap = currentProps.reduce<Record<number, any>>((acc, p) => {
+    const currentStateMap = currentProps.reduce<Record<number, Partial<import('../types').Property>>>((acc, p) => {
       acc[p.id] = { 
         priceOverride: p.priceOverride, 
         rentOverride: p.rentOverride,

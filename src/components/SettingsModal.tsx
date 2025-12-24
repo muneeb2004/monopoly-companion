@@ -16,9 +16,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
   const setJailBailAmount = useGameStore(state => state.setJailBailAmount);
   const setBankTotal = useGameStore(state => state.setBankTotal);
   const setShowBankLowWarning = useGameStore(state => state.setShowBankLowWarning);
+  const setBankLowThreshold = useGameStore(state => state.setBankLowThreshold);
   const setMultipliers = useGameStore(state => state.setMultipliers);
   const applySettingsToProperties = useGameStore(state => state.applySettingsToProperties);
-  const resetSettings = useGameStore(state => state.resetSettings);
+  const resetSettings = useGameStore(state => state.resetSettings); 
 
   const bankTotal = useGameStore(state => state.bankTotal ?? 100000);
 
@@ -48,7 +49,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
     setPm(String(priceMultiplier));
     setRm(String(rentMultiplier));
     setPropOverrides((useGameStore.getState().properties || []).map(pr => ({ id: pr.id, name: pr.name, priceOverride: pr.priceOverride ?? '', rentOverride: pr.rentOverride ? pr.rentOverride.join(',') : '' })));
-  }, [isOpen]);
+  }, [isOpen, startingMoney, jailBailAmount, bankTotal, bankLowThreshold, priceMultiplier, rentMultiplier]);
 
   if (!isOpen) return null;
 

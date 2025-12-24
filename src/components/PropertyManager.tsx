@@ -51,8 +51,10 @@ const PropertyManagerComponent: React.FC<PropertyManagerProps> = ({ isOpen, onCl
   const [expandedId, setExpandedId] = useState<number | null>(null);
 
   // Render counter for tests (only exposed in test env)
-  const renderRef = React.useRef(0);
-  renderRef.current++;
+  const renderRef = React.useRef(1);
+  const rootRef = React.useRef<HTMLDivElement | null>(null);
+  // Increment ref after render and write it to the root element to avoid reading refs during render
+  React.useEffect(() => { renderRef.current++; if (rootRef.current) rootRef.current.setAttribute('data-render-count', String(renderRef.current)); });
 
   if (!isOpen) return null;
 
@@ -89,7 +91,7 @@ const PropertyManagerComponent: React.FC<PropertyManagerProps> = ({ isOpen, onCl
   };
 
   return (
-    <div data-render-count={process.env.NODE_ENV === 'test' ? renderRef.current : undefined} className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div ref={rootRef} className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
       <div className="bg-white w-full max-w-lg h-[90vh] sm:h-[80vh] rounded-t-2xl sm:rounded-2xl flex flex-col shadow-2xl animate-in slide-in-from-bottom-10 fade-in duration-300">
         
         <div className="p-4 border-b border-slate-100 flex items-center justify-between">

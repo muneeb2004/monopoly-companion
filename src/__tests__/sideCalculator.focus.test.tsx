@@ -2,6 +2,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { SideCalculator } from '../components/SideCalculator';
 import { useGameStore } from '../store/gameStore';
+import type { TransactionType } from '../types';
 
 describe('SideCalculator keyboard behavior when inputs are focused', () => {
   beforeEach(() => {
@@ -16,8 +17,9 @@ describe('SideCalculator keyboard behavior when inputs are focused', () => {
   });
 
   it('does not react to number/enter keys when an input is focused, but works when not focused', () => {
-    const mockUpdate = vi.fn();
-    useGameStore.setState({ updateBalance: mockUpdate as any });
+    const mockUpdate = vi.fn(async () => {});
+    type UpdateBalance = (playerId: string, amount: number, type: TransactionType, description: string, toId?: string) => Promise<void>;
+    useGameStore.setState({ updateBalance: mockUpdate as unknown as UpdateBalance });
 
     render(
       <div>

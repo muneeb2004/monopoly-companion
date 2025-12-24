@@ -15,8 +15,10 @@ const SetupScreenComponent: React.FC = () => {
   const [showSettings, setShowSettings] = useState(false);
 
   // Render counter for tests
-  const renderRef = React.useRef(0);
-  renderRef.current++;
+  const renderRef = React.useRef(1);
+  const rootRef = React.useRef<HTMLDivElement | null>(null);
+  // Increment render counter after render and write it to the root element to avoid reading refs during render
+  React.useEffect(() => { renderRef.current++; if (rootRef.current) rootRef.current.setAttribute('data-render-count', String(renderRef.current)); });
 
   const handleAddPlayer = (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,7 +33,7 @@ const SetupScreenComponent: React.FC = () => {
   };
 
   return (
-    <div data-render-count={process.env.NODE_ENV === 'test' ? renderRef.current : undefined} className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+    <div ref={rootRef} className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md border border-slate-200">
         <div className="text-center mb-8 relative">
           <div className="absolute right-0 top-0">

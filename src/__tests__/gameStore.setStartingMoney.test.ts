@@ -11,7 +11,7 @@ vi.mock('../lib/supabase', () => {
 
 // Import the mocked supabase object
 import { supabase } from '../lib/supabase';
-const sb = supabase as any; // narrow for tests (mocked above)
+const sb = supabase as unknown as { from: unknown }; // narrow for tests (mocked above)
 
 describe('gameStore.setStartingMoney', () => {
   beforeEach(() => {
@@ -39,17 +39,17 @@ describe('gameStore.setStartingMoney', () => {
     expect(sb.from).toHaveBeenCalledWith('games');
     expect(sb.from).toHaveBeenCalledWith('players');
 
-    const mockFrom = (sb.from as unknown as any);
+    const mockFrom = sb.from as unknown as { mock?: { calls?: readonly unknown[]; results?: Array<{ value?: { update?: unknown } }> } };
     // There should be 1 + players.length calls to "from": one for games update and one per player
-    expect(mockFrom.mock.calls.length).toBe(1 + state.players.length);
+    expect(mockFrom.mock?.calls?.length).toBe(1 + state.players.length);
 
     // Access the returned object's update mock to inspect update calls
-    const returned = mockFrom.mock.results[0].value;
-    const updateMock = returned.update as unknown as any;
+    const returned = mockFrom.mock?.results?.[0]?.value;
+    const updateMock = returned?.update as unknown as { mock?: { calls?: readonly unknown[] } };
 
     // Ensure at least one update call used starting_money and at least one used balance
-    const updateArgs = (updateMock.mock.calls || []).map((c: any) => c[0]);
-    expect(updateArgs.some((a: any) => a && a.starting_money === 2000)).toBe(true);
-    expect(updateArgs.some((a: any) => a && a.balance === 2000)).toBe(true);
+    const updateArgs = (updateMock.mock.calls || []).map((c: readonly unknown[]) => c[0] as Record<string, unknown>);
+    expect(updateArgs.some(a => a && 'starting_money' in a && (a['starting_money'] as unknown) === 2000)).toBe(true);
+    expect(updateArgs.some(a => a && 'balance' in a && (a['balance'] as unknown) === 2000)).toBe(true);
   });
 });

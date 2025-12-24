@@ -91,7 +91,7 @@ const DiceRollerComponent: React.FC<DiceRollerProps> = ({ onRollComplete }) => {
 
   const processMove = async (total: number) => {
     const currentPos = currentPlayer.position || 0;
-    let newPos = (currentPos + total) % 40;
+    const newPos = (currentPos + total) % 40;
     
     // Pass GO logic
     if (newPos < currentPos) {
