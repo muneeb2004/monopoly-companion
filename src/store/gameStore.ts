@@ -186,12 +186,21 @@ export const useGameStore = create<GameStore>((set, get) => ({
         currentPlayerIndex: gameRes.data.current_player_index,
         players,
         properties: mergedProperties.map(mp => {
-          // merge override fields from DB (propsRes)
+          // merge override fields from DB (propsRes) and ensure required fields are present
           const dp = dynamicProps.find((d: any) => d.property_index === mp.id);
           return {
-            ...mp,
-            priceOverride: dp ? dp.price_override ?? undefined : undefined,
-            rentOverride: dp ? (dp.rent_override || undefined) : undefined
+            id: mp.id,
+            name: mp.name,
+            type: mp.type,
+            group: mp.group,
+            price: mp.price,
+            rent: mp.rent,
+            houseCost: mp.houseCost,
+            ownerId: dp?.owner_id ?? mp.ownerId ?? null,
+            houses: dp?.houses ?? mp.houses ?? 0,
+            isMortgaged: dp?.is_mortgaged ?? mp.isMortgaged ?? false,
+            priceOverride: dp ? dp.price_override ?? undefined : mp.priceOverride ?? undefined,
+            rentOverride: dp ? (dp.rent_override || undefined) : mp.rentOverride ?? undefined
           };
         }),
         transactions,
@@ -380,6 +389,14 @@ export const useGameStore = create<GameStore>((set, get) => ({
       }
     }
     set({ startingMoney: amount });
+  },
+
+  setJailBailAmount: async (amount) => {
+    const { gameId } = get();
+    if (gameId && supabase) {
+      await supabase.from('games').update({ jail_bail_amount: amount }).eq('id', gameId);
+    }
+    set({ jailBailAmount: amount });
   },
 
   setBankTotal: async (amount) => {
