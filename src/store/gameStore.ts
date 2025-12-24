@@ -340,14 +340,16 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const { gameId } = get();
     if (!supabase || !gameId) return;
 
-    // Initialize all properties for the game using current properties (respect settings)
+    // Initialize all properties for the game using current properties (respect settings and overrides)
     const currentProps = get().properties;
     const propertyInserts = currentProps.map(p => ({
       game_id: gameId,
       property_index: p.id,
       owner_id: null,
       houses: 0,
-      is_mortgaged: false
+      is_mortgaged: false,
+      price_override: (p.priceOverride === undefined ? null : p.priceOverride),
+      rent_override: (p.rentOverride === undefined ? null : p.rentOverride)
     }));
 
     await supabase.from('game_properties').insert(propertyInserts);

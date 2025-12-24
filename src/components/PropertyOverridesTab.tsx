@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useGameStore } from '../store/gameStore';
 import { formatNumberInput } from '../lib/utils';
 
@@ -6,11 +6,39 @@ export const PropertyOverridesTab: React.FC = () => {
   const properties = useGameStore(state => state.properties);
   const setPropertyOverride = useGameStore(state => state.setPropertyOverride);
 
+  const [errors, setErrors] = useState<Record<number, string | undefined>>({});
+
   const visible = properties.filter(p => p.type === 'street' || p.type === 'railroad' || p.type === 'utility');
+
+  const handleRentChange = (id: number, rawValue: string) => {
+    const trimmed = rawValue.trim();
+    if (trimmed === '') {
+      // clear
+      setErrors(prev => ({ ...prev, [id]: undefined }));
+      setPropertyOverride(id, useGameStore.getState().properties.find(pr => pr.id === id)?.priceOverride ?? null, null);
+      return;
+    }
+
+    const parts = trimmed.split(',').map(s => s.trim());
+    const parsed: number[] = [];
+    for (const p of parts) {
+      if (p === '') continue;
+      const n = Number(p);
+      if (!Number.isFinite(n) || n < 0) {
+        setErrors(prev => ({ ...prev, [id]: 'Rents must be non-negative numbers, comma-separated.' }));
+        return;
+      }
+      parsed.push(n);
+    }
+
+    // Valid
+    setErrors(prev => ({ ...prev, [id]: undefined }));
+    setPropertyOverride(id, useGameStore.getState().properties.find(pr => pr.id === id)?.priceOverride ?? null, parsed.length ? parsed : null);
+  };
 
   return (
     <div className="space-y-3">
-      <div className="text-sm text-slate-600">Set custom property prices (leave blank to use defaults)</div>
+      <div className="text-sm text-slate-600">Set custom property prices & rents (leave blank to use defaults)</div>
       <div className="max-h-72 overflow-y-auto border border-slate-100 rounded p-2 bg-white">
         {visible.map(p => (
           <div key={p.id} className="flex items-center gap-3 p-2 rounded hover:bg-slate-50">
@@ -45,13 +73,12 @@ export const PropertyOverridesTab: React.FC = () => {
                   type="text"
                   placeholder={p.rent ? p.rent.join(',') : ''}
                   value={p.rentOverride ? p.rentOverride.join(',') : ''}
-                  onChange={(e) => {
-                    const raw = e.target.value.trim();
-                    const rentArr = raw === '' ? null : raw.split(',').map(s => Number(s.trim())).filter(n => Number.isFinite(n));
-                    setPropertyOverride(p.id, p.priceOverride ?? null, rentArr === null ? null : rentArr);
-                  }}
+                  onChange={(e) => handleRentChange(p.id, e.target.value)}
                   className="w-full px-3 py-2 border rounded text-right"
                 />
+                {errors[p.id] && (
+                  <div className="text-xs text-red-600 mt-1">{errors[p.id]}</div>
+                )}
                 {p.rentOverride !== undefined && p.rentOverride && (
                   <div className="text-xs text-slate-400 mt-1">Formatted: {p.rentOverride.map(n => n.toLocaleString()).join(', ')}</div>
                 )}
