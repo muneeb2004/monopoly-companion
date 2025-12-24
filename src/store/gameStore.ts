@@ -42,6 +42,7 @@ interface GameStore extends GameState {
   setJailBailAmount: (amount: number) => Promise<void>;
   setBankTotal: (amount: number) => Promise<void>;
   setShowBankLowWarning: (enabled: boolean) => void;
+  setBankLowThreshold: (amount: number) => Promise<void>;
   setMultipliers: (priceMultiplier: number, rentMultiplier: number) => Promise<void>;
   setPropertyOverride: (propertyId: number, priceOverride?: number | null, rentOverride?: number[] | null) => Promise<void>;
   applySettingsToProperties: () => void;
@@ -65,6 +66,7 @@ const INITIAL_STATE = {
   jailBailAmount: 50,
   bankTotal: 100000,
   showBankLowWarning: true,
+  bankLowThreshold: 10000,
   priceMultiplier: 1,
   rentMultiplier: 1
 };
@@ -85,6 +87,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
           starting_money: get().startingMoney, 
           jail_bail_amount: get().jailBailAmount,
           bank_total: get().bankTotal,
+          bank_low_threshold: get().bankLowThreshold,
           price_multiplier: get().priceMultiplier, 
           rent_multiplier: get().rentMultiplier 
         })
@@ -192,6 +195,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         startingMoney: gameRes.data.starting_money ?? get().startingMoney,
         jailBailAmount: gameRes.data.jail_bail_amount ?? get().jailBailAmount,
         bankTotal: gameRes.data.bank_total ?? get().bankTotal,
+        bankLowThreshold: gameRes.data.bank_low_threshold ?? get().bankLowThreshold,
         isLoading: false
       });
 
@@ -209,7 +213,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
               turnCount: payload.new.turn_count,
               currentPlayerIndex: payload.new.current_player_index,
               jailBailAmount: payload.new.jail_bail_amount ?? get().jailBailAmount,
-              bankTotal: payload.new.bank_total ?? get().bankTotal
+              bankTotal: payload.new.bank_total ?? get().bankTotal,
+              bankLowThreshold: payload.new.bank_low_threshold ?? get().bankLowThreshold
             });
           }
         })
@@ -381,6 +386,14 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
   setShowBankLowWarning: (enabled) => {
     set({ showBankLowWarning: Boolean(enabled) });
+  },
+
+  setBankLowThreshold: async (amount) => {
+    const { gameId } = get();
+    if (gameId && supabase) {
+      await supabase.from('games').update({ bank_low_threshold: amount }).eq('id', gameId);
+    }
+    set({ bankLowThreshold: amount });
   },
 
   setMultipliers: async (priceMultiplier, rentMultiplier) => {

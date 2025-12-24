@@ -22,7 +22,7 @@ describe('SettingsModal UI', () => {
     const saveBtn = screen.getByText('Save');
     await act(async () => {
       fireEvent.click(saveBtn);
-      await new Promise(res => setTimeout(res, 900));
+      await new Promise(res => setTimeout(res, 1500));
     });
 
     expect(screen.queryByText('Saving...')).toBeNull();

@@ -26,7 +26,9 @@ const ActionCenterComponent: React.FC = () => {
 
   const bank = useGameStore(state => state.bankTotal ?? 100000);
   const showBankLowWarning = useGameStore(state => state.showBankLowWarning ?? true);
-  const bankLow = showBankLowWarning && (bank < 10000);
+  const bankLowThreshold = useGameStore(state => state.bankLowThreshold ?? 10000);
+  const bankLow = showBankLowWarning && (bank < bankLowThreshold);
+  const critical = bank < 1000;
 
   // Manual Pass GO backup (hidden in UI but accessible if needed via other means? No, let's keep it simple)
   // We will replace the button with DiceRoller
@@ -76,9 +78,9 @@ const ActionCenterComponent: React.FC = () => {
              )}
              {/* Bank low indicator */}
              {bankLow && (
-               <div className="flex items-center gap-1 bg-red-100 text-red-700 px-2 py-0.5 rounded font-bold text-xs border border-red-200">
-                 <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-                 Bank Low: ${bank}
+               <div className={"flex items-center gap-1 px-2 py-0.5 rounded font-bold text-xs border " + (critical ? 'bg-red-600 text-white border-red-700 animate-pulse' : 'bg-red-100 text-red-700 border-red-200') }>
+                 <svg className={"w-3 h-3 " + (critical ? 'text-white' : '')} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                 {critical ? `CRITICAL: $${bank}` : `Bank Low: $${bank}`}
                </div>
              )}
            </div>
