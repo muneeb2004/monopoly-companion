@@ -240,6 +240,22 @@ const SettingsModalInner: React.FC<SettingsModalProps> = ({ isOpen, onClose }) =
 };
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
+  // Dev-only safe fallback: set `window.__DEBUG_SETTINGS_SAFE = true` in the console
+  // to render a simple static panel which helps isolate render errors.
+  if (typeof window !== 'undefined' && (window as any).__DEBUG_SETTINGS_SAFE) {
+    return (
+      <BottomSheet isOpen={isOpen} onClose={onClose} title={<><Settings2 size={20} /><span>Game Settings (DEBUG)</span></>} className="max-w-3xl">
+        <div className="p-6">
+          <h3 className="text-lg font-bold">Debug Settings</h3>
+          <p className="text-sm text-slate-500 mt-2">This is a minimal fallback to verify that the modal container and overlay are working.</p>
+          <div className="mt-4">
+            <button onClick={onClose} className="px-3 py-2 bg-slate-200 rounded">Close</button>
+          </div>
+        </div>
+      </BottomSheet>
+    );
+  }
+
   try {
     return (
       <ErrorBoundary>
