@@ -15,6 +15,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
   const setStartingMoney = useGameStore(state => state.setStartingMoney);
   const setJailBailAmount = useGameStore(state => state.setJailBailAmount);
   const setBankTotal = useGameStore(state => state.setBankTotal);
+  const setShowBankLowWarning = useGameStore(state => state.setShowBankLowWarning);
   const setMultipliers = useGameStore(state => state.setMultipliers);
   const applySettingsToProperties = useGameStore(state => state.applySettingsToProperties);
   const resetSettings = useGameStore(state => state.resetSettings);
@@ -24,6 +25,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
   const [sm, setSm] = useState<string>(String(startingMoney));
   const [jba, setJba] = useState<string>(String(jailBailAmount));
   const [bt, setBt] = useState<string>(String(bankTotal));
+  const [showBankWarn, setShowBankWarn] = useState<boolean>(Boolean(useGameStore.getState().showBankLowWarning));
   const [pm, setPm] = useState<string>(String(priceMultiplier));
   const [rm, setRm] = useState<string>(String(rentMultiplier));
 
@@ -39,6 +41,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
     setSm(String(startingMoney));
     setJba(String(jailBailAmount));
     setBt(String(bankTotal));
+    setShowBankWarn(Boolean(useGameStore.getState().showBankLowWarning));
     setPm(String(priceMultiplier));
     setRm(String(rentMultiplier));
     setPropOverrides((useGameStore.getState().properties || []).map(pr => ({ id: pr.id, name: pr.name, priceOverride: pr.priceOverride ?? '', rentOverride: pr.rentOverride ? pr.rentOverride.join(',') : '' })));
@@ -55,6 +58,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
       if (typeof setJailBailAmount === 'function') await setJailBailAmount(Number(jba));
       if (typeof setMultipliers === 'function') await setMultipliers(Number(pm), Number(rm));
       if (typeof setBankTotal === 'function') await setBankTotal(Number(bt));
+      if (typeof setShowBankLowWarning === 'function') setShowBankLowWarning(Boolean(showBankWarn));
 
       // Persist per-property overrides (run regardless)
       for (const o of propOverrides) {
@@ -130,6 +134,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
             <label className="block text-sm font-medium text-slate-700">Bank Total</label>
             <input type="number" value={bt} onChange={(e) => setBt(e.target.value)} className="w-full mt-2 p-2 border rounded" />
             <div className="text-xs text-slate-400 mt-1">Total funds available in the bank (default: 100000)</div>
+
+            <div className="flex items-center gap-2 mt-3">
+              <input id="show-bank-warn" type="checkbox" checked={showBankWarn} onChange={(e) => setShowBankWarn(e.target.checked)} />
+              <label htmlFor="show-bank-warn" className="text-sm text-slate-700">Show low-bank warning</label>
+            </div>
           </div>
 
           <div>

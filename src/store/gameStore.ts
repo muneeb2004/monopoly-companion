@@ -41,6 +41,7 @@ interface GameStore extends GameState {
   setStartingMoney: (amount: number) => Promise<void>;
   setJailBailAmount: (amount: number) => Promise<void>;
   setBankTotal: (amount: number) => Promise<void>;
+  setShowBankLowWarning: (enabled: boolean) => void;
   setMultipliers: (priceMultiplier: number, rentMultiplier: number) => Promise<void>;
   setPropertyOverride: (propertyId: number, priceOverride?: number | null, rentOverride?: number[] | null) => Promise<void>;
   applySettingsToProperties: () => void;
@@ -63,6 +64,7 @@ const INITIAL_STATE = {
   startingMoney: 1500,
   jailBailAmount: 50,
   bankTotal: 100000,
+  showBankLowWarning: true,
   priceMultiplier: 1,
   rentMultiplier: 1
 };
@@ -377,6 +379,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set({ bankTotal: amount });
   },
 
+  setShowBankLowWarning: (enabled) => {
+    set({ showBankLowWarning: Boolean(enabled) });
+  },
+
   setMultipliers: async (priceMultiplier, rentMultiplier) => {
     const { gameId } = get();
     if (gameId && supabase) {
@@ -446,7 +452,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       await supabase.from('games').update({ starting_money: 1500, jail_bail_amount: 50, price_multiplier: 1, rent_multiplier: 1, bank_total: 100000 }).eq('id', gameId);
       await supabase.from('game_properties').update({ price_override: null, rent_override: null }).eq('game_id', gameId);
     }
-    set({ startingMoney: 1500, jailBailAmount: 50, bankTotal: 100000, priceMultiplier: 1, rentMultiplier: 1, properties: INITIAL_PROPERTIES });
+    set({ startingMoney: 1500, jailBailAmount: 50, bankTotal: 100000, showBankLowWarning: true, priceMultiplier: 1, rentMultiplier: 1, properties: INITIAL_PROPERTIES });
   },
 
   incrementJailTurns: async (playerId) => {

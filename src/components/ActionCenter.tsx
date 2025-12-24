@@ -24,6 +24,10 @@ const ActionCenterComponent: React.FC = () => {
   const [tradeModalOpen, setTradeModalOpen] = useState(false);
   const [calcModalOpen, setCalcModalOpen] = useState(false);
 
+  const bank = useGameStore(state => state.bankTotal ?? 100000);
+  const showBankLowWarning = useGameStore(state => state.showBankLowWarning ?? true);
+  const bankLow = showBankLowWarning && (bank < 10000);
+
   // Manual Pass GO backup (hidden in UI but accessible if needed via other means? No, let's keep it simple)
   // We will replace the button with DiceRoller
 
@@ -61,7 +65,7 @@ const ActionCenterComponent: React.FC = () => {
              </div>
              <span className="font-bold text-slate-800">{currentPlayer.name}'s Turn</span>
            </div>
-           <div className="flex gap-2">
+           <div className="flex gap-2 items-center">
              {currentPlayer.loans > 0 && (
                <span className="text-[10px] bg-amber-100 text-amber-700 px-2 py-0.5 rounded font-bold uppercase">Debt: ${currentPlayer.loans}</span>
              )}
@@ -69,6 +73,13 @@ const ActionCenterComponent: React.FC = () => {
                <span className="text-[10px] bg-red-100 text-red-700 px-2 py-0.5 rounded font-bold uppercase">
                  In Jail (Turn {currentPlayer.jailTurns || 0}/3)
                </span>
+             )}
+             {/* Bank low indicator */}
+             {bankLow && (
+               <div className="flex items-center gap-1 bg-red-100 text-red-700 px-2 py-0.5 rounded font-bold text-xs border border-red-200">
+                 <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                 Bank Low: ${bank}
+               </div>
              )}
            </div>
         </div>
