@@ -15,6 +15,7 @@ const SetupScreenComponent: React.FC = () => {
   const [diceMode, setDiceMode] = useState<'DIGITAL' | 'PHYSICAL'>('DIGITAL');
   const [showSettings, setShowSettings] = useState(false);
   const [activeTab, setActiveTab] = useState<'players' | 'properties'>('players');
+  const [showStartConfirm, setShowStartConfirm] = useState(false);
 
   // Render counter for tests
   const renderRef = React.useRef(1);
@@ -203,7 +204,7 @@ const SetupScreenComponent: React.FC = () => {
         </div>
 
         <button
-          onClick={() => startGame(diceMode)}
+          onClick={() => setShowStartConfirm(true)}
           disabled={players.length < 2}
           className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold text-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg shadow-blue-200"
         >
@@ -211,6 +212,20 @@ const SetupScreenComponent: React.FC = () => {
           Start Game
         </button>
       </div>
+
+      {showStartConfirm && (
+        <div role="dialog" aria-modal="true" className="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg p-6 w-full max-w-sm">
+            <h3 className="text-lg font-bold mb-2">Start Game</h3>
+            <p className="text-sm text-slate-600 mb-4">Property overrides will be applied when starting the game. Proceed?</p>
+            <div className="flex gap-2">
+              <button onClick={() => setShowStartConfirm(false)} className="flex-1 px-4 py-2 rounded bg-slate-100">Cancel</button>
+              <button onClick={() => { startGame(diceMode); setShowStartConfirm(false); }} className="flex-1 px-4 py-2 rounded bg-blue-600 text-white">Confirm Start</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <SettingsModal isOpen={showSettings} onClose={() => setShowSettings(false)} />
     </div>
   );

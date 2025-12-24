@@ -38,6 +38,27 @@ export const PropertyOverridesTab: React.FC = () => {
               {p.priceOverride === undefined && p.price && (
                 <div className="text-xs text-slate-400 mt-1">Using default: ${formatNumberInput(String(p.price))}</div>
               )}
+
+              <div className="mt-2">
+                <input
+                  aria-label={`rent-${p.id}`}
+                  type="text"
+                  placeholder={p.rent ? p.rent.join(',') : ''}
+                  value={p.rentOverride ? p.rentOverride.join(',') : ''}
+                  onChange={(e) => {
+                    const raw = e.target.value.trim();
+                    const rentArr = raw === '' ? null : raw.split(',').map(s => Number(s.trim())).filter(n => Number.isFinite(n));
+                    setPropertyOverride(p.id, p.priceOverride ?? null, rentArr === null ? null : rentArr);
+                  }}
+                  className="w-full px-3 py-2 border rounded text-right"
+                />
+                {p.rentOverride !== undefined && p.rentOverride && (
+                  <div className="text-xs text-slate-400 mt-1">Formatted: {p.rentOverride.map(n => n.toLocaleString()).join(', ')}</div>
+                )}
+                {p.rentOverride === undefined && p.rent && (
+                  <div className="text-xs text-slate-400 mt-1">Using default: {p.rent.map(n => n.toLocaleString()).join(', ')}</div>
+                )}
+              </div>
             </div>
           </div>
         ))}

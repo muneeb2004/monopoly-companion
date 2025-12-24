@@ -40,4 +40,24 @@ describe('SetupScreen render behavior', () => {
     // Mobile-first: we expect the default column utility to be 3 columns
     expect(grid?.className).toContain('grid-cols-3');
   });
+
+  it('shows confirmation before starting game and calls startGame on confirm', () => {
+    const mockStart = vi.fn(async () => {});
+    useGameStore.setState({ players: [
+      { id: 'p1', name: 'A', token: 'dog', color: '#000', balance: 1500, position:0, isJailed:false, jailTurns:0, getOutOfJailCards:0, loans:0 },
+      { id: 'p2', name: 'B', token: 'car', color: '#111', balance: 1500, position:0, isJailed:false, jailTurns:0, getOutOfJailCards:0, loans:0 }
+    ], startGame: mockStart });
+
+    const { getByText } = render(<SetupScreen />);
+    const startBtn = getByText('Start Game');
+    act(() => { startBtn.click(); });
+
+    // Confirmation should appear
+    expect(getByText(/Property overrides will be applied/i)).toBeTruthy();
+
+    const confirmBtn = getByText('Confirm Start');
+    act(() => { confirmBtn.click(); });
+
+    expect(mockStart).toHaveBeenCalledTimes(1);
+  });
 });

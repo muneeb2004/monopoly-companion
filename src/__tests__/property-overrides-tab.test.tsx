@@ -22,9 +22,17 @@ describe('PropertyOverridesTab', () => {
     const updated = useGameStore.getState().properties.find(pr => pr.id === p!.id);
     expect(updated?.priceOverride).toBe(999);
 
-    // Clear the override
+    // Test rent overrides
+    const rentInput = screen.getByLabelText(`rent-${p!.id}`) as HTMLInputElement;
+    fireEvent.change(rentInput, { target: { value: '5,10' } });
+    const updatedRent = useGameStore.getState().properties.find(pr => pr.id === p!.id);
+    expect(updatedRent?.rentOverride).toEqual([5, 10]);
+
+    // Clear the overrides
     fireEvent.change(input, { target: { value: '' } });
+    fireEvent.change(rentInput, { target: { value: '' } });
     const cleared = useGameStore.getState().properties.find(pr => pr.id === p!.id);
     expect(cleared?.priceOverride).toBeUndefined();
+    expect(cleared?.rentOverride).toBeUndefined();
   });
 });
