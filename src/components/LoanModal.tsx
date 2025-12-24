@@ -51,7 +51,6 @@ export const LoanModal: React.FC<LoanModalProps> = ({ isOpen, onClose }) => {
         <div className="bg-slate-50 p-3 rounded-xl mb-6 border border-slate-100">
           <div className="text-xs text-slate-500 uppercase font-bold tracking-wider mb-1">Current Debt</div>
           <div className="text-2xl font-black text-red-600">${currentPlayer.loans}</div>
-          <div className="text-[10px] text-slate-400 mt-1">* 10% interest applied on repayment</div>
         </div>
 
         <div className="flex p-1 bg-slate-100 rounded-lg mb-6">
@@ -82,12 +81,6 @@ export const LoanModal: React.FC<LoanModalProps> = ({ isOpen, onClose }) => {
               placeholder="0"
               autoFocus
             />
-            {mode === 'REPAY' && (
-               <div className="text-xs text-slate-500 mt-2 flex items-center gap-1">
-                 <TrendingUp size={12} className="text-red-500" />
-                 Total bank deduction: <span className="font-bold text-slate-700">${Math.ceil(Number(amount) * 1.1) || 0}</span>
-               </div>
-            )}
           </div>
 
           <button

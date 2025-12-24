@@ -26,17 +26,18 @@ const DiceRollerComponent: React.FC<DiceRollerProps> = ({ onRollComplete }) => {
   const [manualValue, setManualValue] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
   
-  const [landedInfo, setLandedInfo] = useState<{
-    name: string;
-    rent?: number;
-    ownerName?: string;
-    isOwn?: boolean;
-    canBuy?: boolean;
-    price?: number;
-  } | null>(null);
-
-  // Focus input when switching to physical mode
-  useEffect(() => {
+      const [landedInfo, setLandedInfo] = useState<{
+      name: string;
+      rent?: number;
+      ownerName?: string;
+      isOwn?: boolean;
+      canBuy?: boolean;
+      price?: number;
+      taxAmount?: number;
+    } | null>(null);
+  
+    // Focus input when switching to physical mode
+    useEffect(() => {
     if (diceMode === 'PHYSICAL' && inputRef.current) {
       inputRef.current.focus();
     }
@@ -97,6 +98,20 @@ const DiceRollerComponent: React.FC<DiceRollerProps> = ({ onRollComplete }) => {
        await updateBalance(currentPlayer.id, 200, 'PASS_GO', 'Passed GO');
     }
 
+    // Go To Jail Logic
+    if (newPos === 30) {
+      await movePlayer(currentPlayer.id, 10);
+      await useGameStore.getState().toggleJail(currentPlayer.id);
+      onRollComplete(10);
+      setLandedInfo({
+        name: 'Sent to Jail',
+        isOwn: false,
+        canBuy: false,
+      });
+      setShowResult(true);
+      return;
+    }
+
     await movePlayer(currentPlayer.id, newPos);
     
     analyzeLanding(newPos, total);
@@ -111,13 +126,19 @@ const DiceRollerComponent: React.FC<DiceRollerProps> = ({ onRollComplete }) => {
     const rent = calculateRent(property, properties, rollTotal);
     const owner = players.find(p => p.id === property.ownerId);
 
+    // Tax Logic
+    let taxAmount = 0;
+    if (property.name === 'Income Tax') taxAmount = 200;
+    if (property.name === 'Luxury Tax') taxAmount = 100;
+
     setLandedInfo({
       name: property.name,
       rent: rent > 0 ? rent : undefined,
       ownerName: owner ? owner.name : undefined,
       isOwn: property.ownerId === currentPlayer.id,
       canBuy: !property.ownerId && property.price ? true : false,
-      price: property.price
+      price: property.price,
+      taxAmount: taxAmount > 0 ? taxAmount : undefined
     });
   };
 
@@ -127,6 +148,12 @@ const DiceRollerComponent: React.FC<DiceRollerProps> = ({ onRollComplete }) => {
     if (!property || !property.ownerId) return;
 
     await updateBalance(currentPlayer.id, -landedInfo.rent, 'RENT', `Paid Rent for ${property.name}`, property.ownerId);
+    setShowResult(false);
+  };
+
+  const handlePayTax = async () => {
+    if (!landedInfo?.taxAmount) return;
+    await updateBalance(currentPlayer.id, -landedInfo.taxAmount, 'TAX', `Paid ${landedInfo.name}`);
     setShowResult(false);
   };
 
@@ -257,6 +284,21 @@ const DiceRollerComponent: React.FC<DiceRollerProps> = ({ onRollComplete }) => {
                 className="w-full bg-green-600 text-white py-2 rounded-lg font-bold text-sm hover:bg-green-700 disabled:opacity-50"
               >
                 Buy Property
+              </button>
+            </div>
+          )}
+
+          {landedInfo.taxAmount && (
+            <div className="space-y-2">
+              <div className="text-sm">
+                <span className="font-bold text-red-600">Tax Due: ${landedInfo.taxAmount}</span>
+              </div>
+              <button 
+                onClick={handlePayTax}
+                disabled={currentPlayer.balance < landedInfo.taxAmount}
+                className="w-full bg-red-600 text-white py-2 rounded-lg font-bold text-sm hover:bg-red-700 disabled:opacity-50"
+              >
+                Pay Tax
               </button>
             </div>
           )}

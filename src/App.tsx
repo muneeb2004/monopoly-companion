@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useGameStore } from './store/gameStore';
 import { SetupScreen } from './components/SetupScreen';
 import { Dashboard } from './components/Dashboard';
@@ -9,6 +9,19 @@ function App() {
   const { gameStatus, gameId, isLoading, error, createNewGame, joinGame } = useGameStore();
   const [joinId, setJoinId] = useState('');
   const [isSpectator, setIsSpectator] = useState(false);
+  const [isRestoring, setIsRestoring] = useState(() => !!localStorage.getItem('monopoly_game_id'));
+
+  useEffect(() => {
+    const restoreSession = async () => {
+      const savedGameId = localStorage.getItem('monopoly_game_id');
+      if (savedGameId && !gameId) {
+        setIsRestoring(true);
+        await joinGame(savedGameId);
+      }
+      setIsRestoring(false);
+    };
+    restoreSession();
+  }, [gameId, joinGame]);
 
   const handleJoin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,7 +38,7 @@ function App() {
     }
   };
 
-  if (isLoading) {
+  if (isLoading || isRestoring) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <Loader2 className="w-10 h-10 text-blue-600 animate-spin" />

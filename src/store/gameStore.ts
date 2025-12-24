@@ -39,10 +39,12 @@ interface GameStore extends GameState {
 
   // Settings
   setStartingMoney: (amount: number) => Promise<void>;
+  setJailBailAmount: (amount: number) => Promise<void>;
   setMultipliers: (priceMultiplier: number, rentMultiplier: number) => Promise<void>;
   setPropertyOverride: (propertyId: number, priceOverride?: number | null, rentOverride?: number[] | null) => Promise<void>;
   applySettingsToProperties: () => void;
   resetSettings: () => Promise<void>;
+  incrementJailTurns: (playerId: string) => Promise<void>;
 }
 
 const INITIAL_STATE = {
@@ -58,6 +60,7 @@ const INITIAL_STATE = {
   turnCount: 1,
   diceMode: 'DIGITAL' as 'DIGITAL',
   startingMoney: 1500,
+  jailBailAmount: 50,
   priceMultiplier: 1,
   rentMultiplier: 1
 };
@@ -72,13 +75,21 @@ export const useGameStore = create<GameStore>((set, get) => ({
     try {
       const { data, error } = await supabase
         .from('games')
-        .insert({ status: 'SETUP', dice_mode: 'DIGITAL', starting_money: get().startingMoney, price_multiplier: get().priceMultiplier, rent_multiplier: get().rentMultiplier })
+        .insert({ 
+          status: 'SETUP', 
+          dice_mode: 'DIGITAL', 
+          starting_money: get().startingMoney, 
+          jail_bail_amount: get().jailBailAmount,
+          price_multiplier: get().priceMultiplier, 
+          rent_multiplier: get().rentMultiplier 
+        })
         .select()
         .single();
         
       if (error) throw error;
       
       const gameId = data.id;
+      localStorage.setItem('monopoly_game_id', gameId);
       set({ gameId, gameStatus: 'SETUP', diceMode: 'DIGITAL', isLoading: false });
       get().joinGame(gameId); // Subscribe
       return gameId;
@@ -174,10 +185,16 @@ export const useGameStore = create<GameStore>((set, get) => ({
         transactions,
         trades,
         startingMoney: gameRes.data.starting_money ?? get().startingMoney,
+        jailBailAmount: gameRes.data.jail_bail_amount ?? get().jailBailAmount,
         priceMultiplier: gameRes.data.price_multiplier ?? get().priceMultiplier,
         rentMultiplier: gameRes.data.rent_multiplier ?? get().rentMultiplier,
         isLoading: false
       });
+      
+      // Apply settings to calculate correct prices/rents based on loaded multipliers/overrides
+      get().applySettingsToProperties();
+
+      localStorage.setItem('monopoly_game_id', gameId);
 
       // Setup Realtime Subscription
       supabase.channel(`game:${gameId}`)
@@ -187,7 +204,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
               gameStatus: payload.new.status,
               diceMode: payload.new.dice_mode,
               turnCount: payload.new.turn_count,
-              currentPlayerIndex: payload.new.current_player_index
+              currentPlayerIndex: payload.new.current_player_index,
+              jailBailAmount: payload.new.jail_bail_amount ?? get().jailBailAmount
             });
           }
         })
@@ -277,6 +295,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     if (gameId) {
       supabase.channel(`game:${gameId}`).unsubscribe();
     }
+    localStorage.removeItem('monopoly_game_id');
     set(INITIAL_STATE);
   },
 
@@ -326,11 +345,33 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
   // Settings
   setStartingMoney: async (amount) => {
-    const { gameId } = get();
+    const { gameId, gameStatus, players } = get();
     if (gameId && supabase) {
       await supabase.from('games').update({ starting_money: amount }).eq('id', gameId);
+      
+      // If in setup mode, update existing players' balance to match new starting money
+      if (gameStatus === 'SETUP') {
+        const updates = players.map(p => 
+          supabase.from('players').update({ balance: amount }).eq('id', p.id)
+        );
+        await Promise.all(updates);
+        // Local state update handled by subscription usually, but we can do it optimistically
+        set({ 
+          startingMoney: amount,
+          players: players.map(p => ({ ...p, balance: amount }))
+        });
+        return;
+      }
     }
     set({ startingMoney: amount });
+  },
+
+  setJailBailAmount: async (amount) => {
+    const { gameId } = get();
+    if (gameId && supabase) {
+      await supabase.from('games').update({ jail_bail_amount: amount }).eq('id', gameId);
+    }
+    set({ jailBailAmount: amount });
   },
 
   setMultipliers: async (priceMultiplier, rentMultiplier) => {
@@ -360,29 +401,36 @@ export const useGameStore = create<GameStore>((set, get) => ({
   applySettingsToProperties: () => {
     const priceMul = get().priceMultiplier ?? 1;
     const rentMul = get().rentMultiplier ?? 1;
+    const currentProps = get().properties;
 
-    // Start from INITIAL_PROPERTIES but respect existing per-game overrides in current properties
-    const currentOverrides = get().properties.reduce<Record<number, any>>((acc, p) => {
-      acc[p.id] = { priceOverride: p.priceOverride, rentOverride: p.rentOverride };
+    // Create a map of current state to preserve
+    const currentStateMap = currentProps.reduce<Record<number, any>>((acc, p) => {
+      acc[p.id] = { 
+        priceOverride: p.priceOverride, 
+        rentOverride: p.rentOverride,
+        ownerId: p.ownerId,
+        houses: p.houses,
+        isMortgaged: p.isMortgaged
+      };
       return acc;
-    }, {} as Record<number, any>);
+    }, {});
 
     const merged = INITIAL_PROPERTIES.map(p => {
-      const override = currentOverrides[p.id] || {};
+      const state = currentStateMap[p.id] || {};
       const basePrice = p.price ? Math.round((p.price as number) * priceMul) : undefined;
-      const finalPrice = override.priceOverride ?? basePrice;
+      const finalPrice = state.priceOverride ?? basePrice;
       const baseRent = p.rent ? p.rent.map(r => Math.round(r * rentMul)) : undefined;
-      const finalRent = override.rentOverride ?? baseRent;
+      const finalRent = state.rentOverride ?? baseRent;
 
       return {
         ...p,
         price: finalPrice,
         rent: finalRent,
-        priceOverride: override.priceOverride,
-        rentOverride: override.rentOverride,
-        houses: 0,
-        isMortgaged: false,
-        ownerId: null
+        priceOverride: state.priceOverride,
+        rentOverride: state.rentOverride,
+        houses: state.houses || 0,
+        isMortgaged: state.isMortgaged || false,
+        ownerId: state.ownerId || null
       };
     });
 
@@ -392,10 +440,40 @@ export const useGameStore = create<GameStore>((set, get) => ({
   resetSettings: async () => {
     const { gameId } = get();
     if (gameId && supabase) {
-      await supabase.from('games').update({ starting_money: 1500, price_multiplier: 1, rent_multiplier: 1 }).eq('id', gameId);
+      await supabase.from('games').update({ starting_money: 1500, jail_bail_amount: 50, price_multiplier: 1, rent_multiplier: 1 }).eq('id', gameId);
       await supabase.from('game_properties').update({ price_override: null, rent_override: null }).eq('game_id', gameId);
     }
-    set({ startingMoney: 1500, priceMultiplier: 1, rentMultiplier: 1, properties: INITIAL_PROPERTIES });
+    set({ startingMoney: 1500, jailBailAmount: 50, priceMultiplier: 1, rentMultiplier: 1, properties: INITIAL_PROPERTIES });
+  },
+
+  incrementJailTurns: async (playerId) => {
+     const { gameId, players } = get();
+     if (!supabase || !gameId) return;
+
+     const player = players.find(p => p.id === playerId);
+     if (!player) return;
+
+     const newTurns = (player.jailTurns || 0) + 1;
+     
+     // Check if turns >= 3, then unjail
+     const shouldRelease = newTurns >= 3;
+
+     await supabase.from('players').update({ 
+       jail_turns: shouldRelease ? 0 : newTurns,
+       is_jailed: !shouldRelease 
+     }).eq('id', playerId);
+
+     if (shouldRelease) {
+       // Log release
+       await supabase.from('transactions').insert({
+         game_id: gameId,
+         type: 'OTHER',
+         amount: 0,
+         from_id: 'BANK',
+         to_id: playerId,
+         description: 'Released from Jail (Time served)'
+       });
+     }
   },
 
   nextTurn: async () => {
@@ -517,8 +595,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const player = players.find(p => p.id === playerId);
     if (!player) return;
 
-    const interest = Math.ceil(amount * 0.1);
-    const totalToPay = amount + interest;
+    // No interest - just repay principal
+    const totalToPay = amount;
 
     await supabase.from('transactions').insert({
       game_id: gameId,
@@ -526,7 +604,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       amount: totalToPay,
       from_id: playerId,
       to_id: 'BANK',
-      description: `Repaid $${amount} loan (+$${interest} interest)`,
+      description: `Repaid $${amount} loan`,
       timestamp: Date.now()
     });
 
@@ -666,6 +744,13 @@ export const useGameStore = create<GameStore>((set, get) => ({
     if (action === 'buy') {
       if (property.houses >= 5) return; // Max Hotel
       if (player.balance < property.houseCost) return;
+
+      // Enforce Monopoly Rule
+      if (property.type === 'street') {
+        const groupProperties = properties.filter(p => p.group === property.group);
+        const hasMonopoly = groupProperties.every(p => p.ownerId === player.id);
+        if (!hasMonopoly) return; // Cannot build without monopoly
+      }
 
       await supabase.from('game_properties').update({
         houses: property.houses + 1

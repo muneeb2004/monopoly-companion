@@ -26,7 +26,7 @@ const PlayerCardComponent: React.FC<PlayerCardProps> = ({ player, isCurrentTurn,
     >
       {/* Background Color Strip */}
       <div 
-        className="absolute top-0 left-0 right-0 h-1.5 opacity-80" 
+        className="absolute top-0 left-0 right-0 h-1.5 opacity-80 rounded-t-[9px]" 
         style={{ backgroundColor: player.color }}
       />
 

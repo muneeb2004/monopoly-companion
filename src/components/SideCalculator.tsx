@@ -1,29 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { useGameStore } from '../store/gameStore';
-import { X, Delete, Calculator } from 'lucide-react';
+import { Delete, ChevronLeft, ChevronRight, Calculator } from 'lucide-react';
 import { cn } from '../lib/utils';
 
-interface CalculatorModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-}
-
-const CalculatorModalComponent: React.FC<CalculatorModalProps> = ({ isOpen, onClose }) => {
+export const SideCalculator: React.FC = () => {
   const players = useGameStore(state => state.players);
   const currentPlayerIndex = useGameStore(state => state.currentPlayerIndex);
   const updateBalance = useGameStore(state => state.updateBalance);
   
-  // Default to current player
+  const [isOpen, setIsOpen] = useState(true);
   const [selectedPlayerId, setSelectedPlayerId] = useState<string>('');
   const [value, setValue] = useState<string>('0');
   
-  // Update selected player when modal opens or current player changes
+  // Update selected player when current player changes
   useEffect(() => {
-    if (isOpen && players.length > 0) {
+    if (players.length > 0) {
       setSelectedPlayerId(players[currentPlayerIndex].id);
-      setValue('0');
     }
-  }, [isOpen, currentPlayerIndex, players]);
+  }, [currentPlayerIndex, players]);
 
   // Keyboard support
   useEffect(() => {
@@ -45,7 +39,7 @@ const CalculatorModalComponent: React.FC<CalculatorModalProps> = ({ isOpen, onCl
         e.preventDefault();
         handleClear();
       }
-      // Enter (Optional: could trigger Add or just do nothing. Let's trigger Add for convenience if value > 0)
+      // Enter (Trigger Add)
       else if (e.key === 'Enter') {
          e.preventDefault();
          executeTransaction('ADD');
@@ -54,14 +48,12 @@ const CalculatorModalComponent: React.FC<CalculatorModalProps> = ({ isOpen, onCl
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, value, selectedPlayerId]); // Dependencies needed for handlers called inside
-
-  if (!isOpen) return null;
+  }, [isOpen, value, selectedPlayerId]);
 
   const handleNumberClick = (num: string) => {
     setValue(prev => {
       if (prev === '0') return num;
-      if (prev.length >= 9) return prev; // Max length limit
+      if (prev.length >= 9) return prev;
       return prev + num;
     });
   };
@@ -85,71 +77,74 @@ const CalculatorModalComponent: React.FC<CalculatorModalProps> = ({ isOpen, onCl
     const description = type === 'ADD' ? 'Manual Deposit' : 'Manual Deduction';
     
     updateBalance(selectedPlayerId, finalAmount, 'OTHER', description);
-    
-    // Optional: Close on success or just reset value? 
-    // Usually convenient to close, but for a "banker" mode maybe keeping open is better.
-    // Let's close for now to be consistent with other modals.
-    onClose();
+    setValue('0');
   };
 
   const selectedPlayer = players.find(p => p.id === selectedPlayerId);
 
   return (
-    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
+    <div className={cn(
+      "fixed right-0 top-1/2 -translate-y-1/2 z-30 transition-all duration-300 hidden lg:flex",
+      isOpen ? "translate-x-0" : "translate-x-[calc(100%-24px)]"
+    )}>
+      {/* Toggle Tab */}
+      <button 
+        onClick={() => setIsOpen(!isOpen)}
+        className="absolute left-0 top-1/2 -translate-x-full -translate-y-1/2 bg-slate-800 text-white p-2 rounded-l-xl shadow-lg hover:bg-slate-700 flex flex-col items-center gap-2 py-4 border-r border-slate-700"
+      >
+        {isOpen ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+        <Calculator size={20} />
+      </button>
+
+      {/* Calculator Body */}
+      <div className="bg-white border-l border-y border-slate-200 shadow-2xl rounded-l-2xl w-80 overflow-hidden flex flex-col max-h-[80vh]">
         
         {/* Header */}
-        <div className="bg-slate-50 p-4 border-b border-slate-100 flex items-center justify-between">
-          <div className="flex items-center gap-2 text-slate-700 font-bold">
-            <Calculator size={20} />
-            <span>Quick Calculator</span>
-          </div>
-          <button onClick={onClose} className="p-2 hover:bg-slate-200 rounded-full transition-colors text-slate-500">
-            <X size={20} />
-          </button>
+        <div className="bg-slate-50 p-3 border-b border-slate-100 flex items-center justify-between">
+          <span className="font-bold text-slate-700 text-sm">Quick Banker</span>
         </div>
 
         {/* Player Selector */}
-        <div className="p-4 border-b border-slate-100 overflow-x-auto">
-          <div className="flex gap-2">
+        <div className="p-2 border-b border-slate-100 overflow-x-auto">
+          <div className="flex gap-2 pb-1">
             {players.map(p => (
               <button
                 key={p.id}
                 onClick={() => setSelectedPlayerId(p.id)}
                 className={cn(
-                  "flex items-center gap-2 px-3 py-2 rounded-lg border-2 transition-all whitespace-nowrap",
+                  "flex items-center gap-1 px-2 py-1.5 rounded-lg border transition-all whitespace-nowrap min-w-[80px]",
                   selectedPlayerId === p.id 
                     ? "border-slate-800 bg-slate-800 text-white" 
                     : "border-slate-100 bg-white text-slate-600 hover:border-slate-300"
                 )}
               >
                 <div 
-                  className="w-3 h-3 rounded-full border border-white/50" 
+                  className="w-2 h-2 rounded-full border border-white/50" 
                   style={{ backgroundColor: p.color }}
                 />
-                <span className="text-sm font-bold">{p.name}</span>
+                <span className="text-xs font-bold truncate max-w-[60px]">{p.name}</span>
               </button>
             ))}
           </div>
         </div>
 
         {/* Display */}
-        <div className="p-6 bg-slate-900 text-white text-right">
-          <div className="text-sm text-slate-400 font-medium mb-1">
-             {selectedPlayer ? `Adjusting ${selectedPlayer.name}'s Balance` : 'Select a Player'}
+        <div className="p-4 bg-slate-900 text-white text-right">
+          <div className="text-xs text-slate-400 font-medium mb-1 truncate">
+             {selectedPlayer ? `${selectedPlayer.name}` : 'Select Player'}
           </div>
-          <div className="text-5xl font-mono tracking-tight font-bold">
+          <div className="text-3xl font-mono tracking-tight font-bold">
             {parseInt(value).toLocaleString()}
           </div>
         </div>
 
         {/* Keypad */}
-        <div className="p-4 grid grid-cols-3 gap-3 bg-slate-50">
+        <div className="p-3 grid grid-cols-3 gap-3 bg-slate-50 flex-1">
           {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(num => (
             <button
               key={num}
               onClick={() => handleNumberClick(num.toString())}
-              className="h-16 rounded-xl bg-white shadow-sm border border-slate-200 text-2xl font-bold text-slate-700 hover:bg-slate-50 active:scale-95 transition-all"
+              className="h-16 rounded-xl bg-white shadow-sm border border-slate-200 text-xl font-bold text-slate-700 hover:bg-slate-50 active:scale-95 transition-all"
             >
               {num}
             </button>
@@ -164,7 +159,7 @@ const CalculatorModalComponent: React.FC<CalculatorModalProps> = ({ isOpen, onCl
           
           <button
             onClick={() => handleNumberClick('0')}
-            className="h-16 rounded-xl bg-white shadow-sm border border-slate-200 text-2xl font-bold text-slate-700 hover:bg-slate-50 active:scale-95 transition-all"
+            className="h-16 rounded-xl bg-white shadow-sm border border-slate-200 text-xl font-bold text-slate-700 hover:bg-slate-50 active:scale-95 transition-all"
           >
             0
           </button>
@@ -173,23 +168,23 @@ const CalculatorModalComponent: React.FC<CalculatorModalProps> = ({ isOpen, onCl
             onClick={handleBackspace}
             className="h-16 rounded-xl bg-slate-100 shadow-sm border border-slate-200 text-slate-600 hover:bg-slate-200 active:scale-95 transition-all flex items-center justify-center"
           >
-            <Delete size={24} />
+            <Delete size={20} />
           </button>
         </div>
 
         {/* Actions */}
-        <div className="p-4 grid grid-cols-2 gap-4 bg-white border-t border-slate-100">
+        <div className="p-3 grid grid-cols-2 gap-3 bg-white border-t border-slate-100">
           <button
             onClick={() => executeTransaction('DEDUCT')}
             disabled={value === '0' || !selectedPlayerId}
-            className="h-14 rounded-xl bg-red-500 text-white font-bold text-lg hover:bg-red-600 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-red-200"
+            className="h-14 rounded-xl bg-red-500 text-white font-bold text-lg hover:bg-red-600 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           >
             - Deduct
           </button>
           <button
             onClick={() => executeTransaction('ADD')}
             disabled={value === '0' || !selectedPlayerId}
-            className="h-14 rounded-xl bg-green-500 text-white font-bold text-lg hover:bg-green-600 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-green-200"
+            className="h-14 rounded-xl bg-green-500 text-white font-bold text-lg hover:bg-green-600 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           >
             + Add
           </button>
@@ -198,5 +193,3 @@ const CalculatorModalComponent: React.FC<CalculatorModalProps> = ({ isOpen, onCl
     </div>
   );
 };
-
-export const CalculatorModal = React.memo(CalculatorModalComponent);

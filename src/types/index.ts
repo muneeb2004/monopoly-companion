@@ -69,4 +69,5 @@ export interface GameState {
   startingMoney?: number;
   priceMultiplier?: number; // multiply base price by this
   rentMultiplier?: number;  // multiply base rent by this
+  jailBailAmount?: number;
 }

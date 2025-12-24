@@ -1,16 +1,19 @@
 import React, { useState } from 'react';
 import { useGameStore } from '../store/gameStore';
-import { Plus, Play, Users, Dices, Keyboard } from 'lucide-react';
+import { Plus, Play, Users, Dices, Keyboard, Settings2 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { GAME_TOKENS, getTokenById } from '../data/tokens';
+import { SettingsModal } from './SettingsModal';
 
 const SetupScreenComponent: React.FC = () => {
   const players = useGameStore(state => state.players);
   const addPlayer = useGameStore(state => state.addPlayer);
   const startGame = useGameStore(state => state.startGame);
+  const startingMoney = useGameStore(state => state.startingMoney);
   const [newName, setNewName] = useState('');
   const [selectedTokenId, setSelectedTokenId] = useState(GAME_TOKENS[0].id);
   const [diceMode, setDiceMode] = useState<'DIGITAL' | 'PHYSICAL'>('DIGITAL');
+  const [showSettings, setShowSettings] = useState(false);
 
   // Render counter for tests
   const renderRef = React.useRef(0);
@@ -31,7 +34,16 @@ const SetupScreenComponent: React.FC = () => {
   return (
     <div data-render-count={process.env.NODE_ENV === 'test' ? renderRef.current : undefined} className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md border border-slate-200">
-        <div className="text-center mb-8">
+        <div className="text-center mb-8 relative">
+          <div className="absolute right-0 top-0">
+            <button 
+              onClick={() => setShowSettings(true)}
+              className="p-2 bg-slate-50 text-slate-500 rounded-full hover:bg-slate-100 hover:text-slate-900 transition-colors"
+              title="Game Settings"
+            >
+              <Settings2 size={20} />
+            </button>
+          </div>
           <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4">
             <Users className="w-8 h-8 text-blue-600" />
           </div>
@@ -114,7 +126,7 @@ const SetupScreenComponent: React.FC = () => {
                 </div>
                 <div className="flex items-center gap-2">
                    <div className="w-2 h-2 rounded-full" style={{ backgroundColor: player.color }} />
-                   <span className="text-slate-400 text-sm">$1,500</span>
+                   <span className="text-slate-400 text-sm">${player.balance.toLocaleString()}</span>
                 </div>
               </div>
             );
@@ -171,6 +183,7 @@ const SetupScreenComponent: React.FC = () => {
           Start Game
         </button>
       </div>
+      <SettingsModal isOpen={showSettings} onClose={() => setShowSettings(false)} />
     </div>
   );
 };

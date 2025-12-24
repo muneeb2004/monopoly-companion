@@ -2,10 +2,11 @@ import React, { useState, useMemo } from 'react';
 import { useGameStore } from '../store/gameStore';
 import { PlayerCard } from './PlayerCard';
 import { ActionCenter } from './ActionCenter';
-import { History, Map as MapIcon, Bell, Building2, Settings2 } from 'lucide-react';
+import { History, Map as MapIcon, Bell, Building2, Settings2, Copy, Check } from 'lucide-react';
 import { PropertyManager } from './PropertyManager';
 import { BoardMap } from './BoardMap';
 import { SettingsModal } from './SettingsModal';
+import { SideCalculator } from './SideCalculator';
 
 
 const DashboardComponent: React.FC = () => {
@@ -15,14 +16,24 @@ const DashboardComponent: React.FC = () => {
   const properties = useGameStore(state => state.properties);
   const trades = useGameStore(state => state.trades);
   const respondToTrade = useGameStore(state => state.respondToTrade);
+  const gameId = useGameStore(state => state.gameId);
   const [showProperties, setShowProperties] = useState(false);
   const [showMap, setShowMap] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const renderRef = React.useRef(0);
   renderRef.current++;
 
   const currentPlayer = useMemo(() => players[currentPlayerIndex], [players, currentPlayerIndex]);
+
+  const handleCopyGameId = () => {
+    if (gameId) {
+      navigator.clipboard.writeText(gameId);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
 
   const getPlayerPropertyCount = (playerId: string) => {
     return properties.filter(p => p.ownerId === playerId).length;
@@ -35,8 +46,25 @@ const DashboardComponent: React.FC = () => {
       {/* Top Header */}
       <header className="bg-white border-b border-slate-200 p-4 sticky top-0 z-40 shadow-sm">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <h1 className="text-xl font-bold text-slate-900 tracking-tight">Monopoly Tracker</h1>
+          <div className="flex items-center gap-3">
+            <h1 className="text-xl font-bold text-slate-900 tracking-tight hidden sm:block">Monopoly Tracker</h1>
+            <h1 className="text-xl font-bold text-slate-900 tracking-tight sm:hidden">Monopoly</h1>
+            
+            <button 
+              onClick={handleCopyGameId}
+              className="group flex items-center gap-2 bg-slate-100 hover:bg-slate-200 active:scale-95 transition-all px-3 py-1.5 rounded-full border border-slate-200"
+              title="Click to copy Game ID"
+            >
+              <span className="font-mono text-xs font-bold text-slate-600 tracking-wider">
+                {gameId}
+              </span>
+              {copied ? (
+                <Check size={14} className="text-green-600" />
+              ) : (
+                <Copy size={14} className="text-slate-400 group-hover:text-slate-600" />
+              )}
+            </button>
+
             <div className="text-sm font-medium text-slate-500 bg-slate-100 px-3 py-1 rounded-full hidden sm:block">
               Turn {useGameStore(state => state.turnCount)}
             </div>
@@ -149,7 +177,7 @@ const DashboardComponent: React.FC = () => {
               Turn {useGameStore(state => state.turnCount)}
             </div>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+          <div className="grid grid-cols-1 min-[450px]:grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
             {players.map((player, index) => (
               <PlayerCard 
                 key={player.id} 
@@ -196,8 +224,8 @@ const DashboardComponent: React.FC = () => {
       <ActionCenter />
       <PropertyManager isOpen={showProperties} onClose={() => setShowProperties(false)} />
       <BoardMap isOpen={showMap} onClose={() => setShowMap(false)} />
-      <PropertyManager isOpen={showProperties} onClose={() => setShowProperties(false)} />
       <SettingsModal isOpen={showSettings} onClose={() => setShowSettings(false)} />
+      <SideCalculator />
     </div>
   );
 };
