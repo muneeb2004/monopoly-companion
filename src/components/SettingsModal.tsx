@@ -21,9 +21,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
   const setBankLowThreshold = useGameStore(state => state.setBankLowThreshold);
   const setMultipliers = useGameStore(state => state.setMultipliers);
   const setGroupHouseRentMode = useGameStore(state => state.setGroupHouseRentMode);
-  const groupHouseRentMode = useGameStore(state => state.groupHouseRentMode ?? 'standard');
   const setShowGroupHouseTotals = useGameStore(state => state.setShowGroupHouseTotals);
-  const showGroupHouseTotals = useGameStore(state => state.showGroupHouseTotals ?? false);
   const applySettingsToProperties = useGameStore(state => state.applySettingsToProperties);
   const resetSettings = useGameStore(state => state.resetSettings); 
 
@@ -73,6 +71,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
       if (typeof setMultipliers === 'function') await setMultipliers(Number(pm), Number(rm));
       if (typeof setGroupHouseRentMode === 'function') await setGroupHouseRentMode(rentCalcMode);
       if (typeof setShowGroupHouseTotals === 'function') await setShowGroupHouseTotals(showGroupTotalsChecked);
+      if (typeof setBankTotal === 'function') await setBankTotal(Number(bt));
+      if (typeof setBankLowThreshold === 'function') await setBankLowThreshold(Number(bth));
+      if (typeof setShowBankLowWarning === 'function') setShowBankLowWarning(Boolean(showBankWarn));
 
       // Persist per-property overrides (run regardless)
       for (const o of propOverrides) {

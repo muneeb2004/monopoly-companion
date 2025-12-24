@@ -2,9 +2,6 @@ import React, { useState } from 'react';
 import { useGameStore } from '../store/gameStore';
 import { X, ChevronDown, ChevronUp, Home, Ban, Trophy } from 'lucide-react';
 import { cn, calculateRent } from '../lib/utils';
-
-// Read rent mode from store to support group-total mode
-import { useGameStore } from '../store/gameStore';
 import type { Property } from '../types';
 
 interface PropertyManagerProps {

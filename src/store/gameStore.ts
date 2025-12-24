@@ -84,7 +84,7 @@ const INITIAL_STATE = {
   bankLowThreshold: 10000,
   priceMultiplier: 1,
   rentMultiplier: 1,
-  groupHouseRentMode: 'standard',
+  groupHouseRentMode: 'standard' as const,
   showGroupHouseTotals: false,
   undoEntries: []
 };
@@ -260,8 +260,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
         jailBailAmount: gameRes.data.jail_bail_amount ?? get().jailBailAmount,
         bankTotal: gameRes.data.bank_total ?? get().bankTotal,
         bankLowThreshold: gameRes.data.bank_low_threshold ?? get().bankLowThreshold,
-        groupHouseRentMode: (gameRes.data.group_house_rent_mode as ('standard'|'groupTotal')) ?? get().groupHouseRentMode,
-        showGroupHouseTotals: (gameRes.data.show_group_house_totals === true) ?? get().showGroupHouseTotals,
+        // Coerce group_house_rent_mode to the expected union type safely
+        groupHouseRentMode: (gameRes.data.group_house_rent_mode === 'groupTotal' ? 'groupTotal' : (gameRes.data.group_house_rent_mode === 'standard' ? 'standard' : get().groupHouseRentMode)),
+        showGroupHouseTotals: (typeof gameRes.data.show_group_house_totals === 'boolean') ? gameRes.data.show_group_house_totals : get().showGroupHouseTotals,
         // load undo entries for the game
         undoEntries: (await (async () => {
           try {
@@ -777,7 +778,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
 
   recordUndo: async (playerId, description) => {
-    const { gameId, players } = get();
+    const { gameId } = get();
     const timestamp = Date.now();
 
     if (!supabase || !gameId) {
